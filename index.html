@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Wrap a screenshot in a simple phone or browser frame and export it as PNG or JPEG." />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='8' y='2' width='16' height='28' rx='4' fill='%231c1c1e'/%3E%3Crect x='10' y='4' width='12' height='24' rx='2.5' fill='%236366f1'/%3E%3Crect x='13' y='5.5' width='6' height='1.8' rx='0.9' fill='%231c1c1e'/%3E%3C/svg%3E"
+    />
+    <title>Simple Mockup</title>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <header class="brand">
+          <h1>Simple Mockup</h1>
+          <p>Wrap a screenshot in a device frame.</p>
+        </header>
+
+        <form id="controls" autocomplete="off">
+          <section>
+            <h2>Screenshot</h2>
+            <label class="button" for="screenshot-input">Upload screenshot</label>
+            <input type="file" id="screenshot-input" accept="image/*" hidden />
+            <p class="hint" id="screenshot-hint">You can also drop an image anywhere or paste it with Ctrl+V.</p>
+          </section>
+
+          <section>
+            <h2>Device</h2>
+            <div class="segmented segmented-2x2" role="radiogroup" aria-label="Device">
+              <label><input type="radio" name="device" value="android" /><span>Android</span></label>
+              <label><input type="radio" name="device" value="iphone" /><span>iPhone</span></label>
+              <label><input type="radio" name="device" value="browser" /><span>Browser</span></label>
+              <label><input type="radio" name="device" value="simple" /><span>Simple frame</span></label>
+            </div>
+
+            <div class="options" data-show-when-device="android">
+              <label class="field">
+                <span>Punch hole size <output data-for="punchHoleSize"></output></span>
+                <input type="range" name="punchHoleSize" min="50" max="150" step="1" />
+              </label>
+            </div>
+
+            <div class="options" data-show-when-device="iphone">
+              <label class="field">
+                <span>Dynamic island size <output data-for="islandSize"></output></span>
+                <input type="range" name="islandSize" min="50" max="150" step="1" />
+              </label>
+            </div>
+
+            <div class="options" data-show-when-device="simple">
+              <label class="field">
+                <span>Border color</span>
+                <input type="color" name="simpleColor" />
+              </label>
+              <label class="field">
+                <span>Border width <output data-for="simpleWidth"></output></span>
+                <input type="range" name="simpleWidth" min="0" max="10" step="0.1" />
+              </label>
+              <label class="field">
+                <span>Corner radius <output data-for="simpleRadius"></output></span>
+                <input type="range" name="simpleRadius" min="0" max="20" step="0.5" />
+              </label>
+            </div>
+
+            <div class="options" data-show-when-device="browser">
+              <div class="field">
+                <span>Appearance</span>
+                <div class="segmented" role="radiogroup" aria-label="Browser appearance">
+                  <label><input type="radio" name="browserAppearance" value="light" /><span>Light</span></label>
+                  <label><input type="radio" name="browserAppearance" value="dark" /><span>Dark</span></label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2>Layout</h2>
+            <label class="field">
+              <span>Padding <output data-for="padding"></output></span>
+              <input type="range" name="padding" min="0" max="30" step="1" />
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="shadow" />
+              <span>Drop shadow</span>
+            </label>
+          </section>
+
+          <section>
+            <h2>Background</h2>
+            <div class="segmented" role="radiogroup" aria-label="Background">
+              <label><input type="radio" name="background" value="none" /><span>None</span></label>
+              <label><input type="radio" name="background" value="color" /><span>Color</span></label>
+              <label><input type="radio" name="background" value="image" /><span>Image</span></label>
+            </div>
+
+            <div class="options" data-show-when-background="color">
+              <label class="field">
+                <span>Color</span>
+                <input type="color" name="backgroundColor" />
+              </label>
+            </div>
+
+            <div class="options" data-show-when-background="image">
+              <label class="button button-secondary" for="background-input">Upload background</label>
+              <input type="file" id="background-input" accept="image/*" hidden />
+              <p class="hint" id="background-hint">No background image selected.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2>Export</h2>
+            <div class="segmented" role="radiogroup" aria-label="Format">
+              <label><input type="radio" name="format" value="png" /><span>PNG</span></label>
+              <label><input type="radio" name="format" value="jpeg" /><span>JPEG</span></label>
+            </div>
+            <p class="hint warning" id="jpeg-hint" hidden>
+              JPEG doesn't support transparency, so the background will be white.
+            </p>
+            <button type="button" class="button button-primary" id="download">Download</button>
+          </section>
+        </form>
+      </aside>
+
+      <main class="stage">
+        <div class="preview">
+          <canvas id="canvas"></canvas>
+        </div>
+        <p class="meta">
+          <span id="sample-note">Showing a sample screenshot.</span>
+          <span id="dimensions"></span>
+        </p>
+        <div class="drop-overlay" id="drop-overlay">Drop to use as screenshot</div>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
