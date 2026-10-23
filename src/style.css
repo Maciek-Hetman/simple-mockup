@@ -46,6 +46,8 @@ body {
 }
 
 .sidebar {
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding: 20px;
   background: var(--panel);
@@ -57,23 +59,29 @@ body {
   font-size: 18px;
 }
 
-.brand p {
-  margin: 4px 0 0;
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   color: var(--muted);
 }
 
-.repo-link {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--muted);
-  text-decoration: none;
+.icon-button:hover {
+  background: var(--control);
+  color: var(--text);
 }
 
-.repo-link:hover,
-.repo-link:focus-visible {
-  color: var(--accent);
-  text-decoration: underline;
+.icon-button:focus-visible {
+  outline: 2px solid var(--accent);
 }
 
 section {
@@ -208,14 +216,82 @@ h2 {
   accent-color: var(--accent);
 }
 
-.field input[type='color'] {
-  width: 100%;
+.color-picker {
+  display: grid;
+  gap: 10px;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.swatch {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  border-radius: 50%;
+  background: var(--swatch);
+  cursor: pointer;
+}
+
+.swatch:hover {
+  transform: scale(1.1);
+}
+
+.swatch[aria-pressed='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.color-custom {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 8px;
+}
+
+.color-picker input[type='color'] {
+  width: 34px;
   height: 34px;
-  padding: 2px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+
+.color-picker input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker input[type='color']::-webkit-color-swatch,
+.color-picker input[type='color']::-moz-color-swatch {
+  border: none;
+}
+
+.hex {
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--control);
-  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.hex:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 section > .field + .checkbox {

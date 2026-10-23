@@ -1,4 +1,5 @@
 import './style.css';
+import { initColorPickers } from './color-picker.ts';
 import { cleanFileName, downloadCanvas, EXTENSIONS } from './export.ts';
 import { render } from './render.ts';
 import { samplePicture } from './sample.ts';
@@ -32,6 +33,8 @@ let screenshot: (Picture & { name: string }) | null = null;
 let backgroundImage: (Picture & { name: string }) | null = null;
 /** The name the user last saved under, until a new screenshot comes in. */
 let lastFileName: string | null = null;
+
+const syncColorPickers = initColorPickers(form);
 
 const input = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
 const radios = (name: string) => form.elements.namedItem(name) as RadioNodeList;
@@ -78,6 +81,7 @@ function updateUi(): void {
   for (const out of form.querySelectorAll<HTMLOutputElement>('output[data-for]')) {
     out.value = `${input(out.dataset.for!).value}%`;
   }
+  syncColorPickers();
 
   const transparent =
     state.background === 'none' || (state.background === 'image' && !backgroundImage);
@@ -87,14 +91,12 @@ function updateUi(): void {
   if (screenshot) {
     setHint(screenshotHint, `Using ${screenshot.name} (${screenshot.width} × ${screenshot.height}).`);
   }
-  setHint(
-    backgroundHint,
-    backgroundImage ? `Using ${backgroundImage.name}.` : 'No background image selected.',
-  );
+  setHint(backgroundHint, backgroundImage ? `Using ${backgroundImage.name}.` : '');
 }
 
 function setHint(el: HTMLElement, text: string, warning = false): void {
   el.textContent = text;
+  el.hidden = text === '';
   el.classList.toggle('warning', warning);
 }
 
