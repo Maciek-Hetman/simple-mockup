@@ -1,5 +1,5 @@
 import './style.css';
-import { downloadCanvas } from './export.ts';
+import { cleanFileName, downloadCanvas, EXTENSIONS } from './export.ts';
 import { render } from './render.ts';
 import { samplePicture } from './sample.ts';
 import {
@@ -22,10 +22,16 @@ const jpegHint = document.querySelector<HTMLElement>('#jpeg-hint')!;
 const sampleNote = document.querySelector<HTMLElement>('#sample-note')!;
 const dimensions = document.querySelector<HTMLElement>('#dimensions')!;
 const downloadButton = document.querySelector<HTMLButtonElement>('#download')!;
+const saveDialog = document.querySelector<HTMLDialogElement>('#save-dialog')!;
+const saveCancel = document.querySelector<HTMLButtonElement>('#save-cancel')!;
+const fileNameInput = document.querySelector<HTMLInputElement>('#file-name')!;
+const fileNameExtension = document.querySelector<HTMLElement>('#file-name-extension')!;
 
 const state: MockupState = structuredClone(defaultState);
 let screenshot: (Picture & { name: string }) | null = null;
 let backgroundImage: (Picture & { name: string }) | null = null;
+/** The name the user last saved under, until a new screenshot comes in. */
+let lastFileName: string | null = null;
 
 const input = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
 const radios = (name: string) => form.elements.namedItem(name) as RadioNodeList;
@@ -127,6 +133,7 @@ async function setScreenshot(file: File): Promise<void> {
     const picture = await loadPicture(file);
     closePicture(screenshot);
     screenshot = picture;
+    lastFileName = null;
     update();
   } catch {
     setHint(screenshotHint, `Couldn't read ${file.name} as an image.`, true);
@@ -198,9 +205,27 @@ window.addEventListener('drop', (event) => {
   if (file) void setScreenshot(file);
 });
 
+function suggestedFileName(): string {
+  if (lastFileName) return lastFileName;
+  if (!screenshot) return 'mockup';
+  return `${screenshot.name.replace(/\.[^.]+$/, '')}-mockup`;
+}
+
 downloadButton.addEventListener('click', () => {
+  fileNameInput.value = suggestedFileName();
+  fileNameExtension.textContent = `.${EXTENSIONS[state.format]}`;
+  saveDialog.returnValue = '';
+  saveDialog.showModal();
+  fileNameInput.select();
+});
+
+saveCancel.addEventListener('click', () => saveDialog.close());
+
+saveDialog.addEventListener('close', () => {
+  if (saveDialog.returnValue !== 'save') return;
+  lastFileName = cleanFileName(fileNameInput.value) || null;
   renderNow();
-  void downloadCanvas(canvas, state.format);
+  void downloadCanvas(canvas, state.format, fileNameInput.value);
 });
 
 writeForm(state);

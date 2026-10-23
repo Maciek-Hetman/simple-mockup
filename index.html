@@ -118,7 +118,7 @@
             <p class="hint warning" id="jpeg-hint" hidden>
               JPEG doesn't support transparency, so the background will be white.
             </p>
-            <button type="button" class="button button-primary" id="download">Download</button>
+            <button type="button" class="button button-primary" id="download">Download…</button>
           </section>
         </form>
       </aside>
@@ -134,6 +134,23 @@
         <div class="drop-overlay" id="drop-overlay">Drop to use as screenshot</div>
       </main>
     </div>
+
+    <dialog class="dialog" id="save-dialog" aria-labelledby="save-dialog-title" closedby="any">
+      <form method="dialog" autocomplete="off">
+        <h2 class="dialog-title" id="save-dialog-title">Save mockup</h2>
+        <div class="field">
+          <label for="file-name">File name</label>
+          <div class="file-name">
+            <input type="text" id="file-name" spellcheck="false" />
+            <span id="file-name-extension">.png</span>
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="button" id="save-cancel">Cancel</button>
+          <button type="submit" class="button button-primary" value="save">Save</button>
+        </div>
+      </form>
+    </dialog>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
