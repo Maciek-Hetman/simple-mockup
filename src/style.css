@@ -387,10 +387,6 @@ h2 + .stack {
   padding: 0 8px;
 }
 
-section > .field + .checkbox {
-  margin-top: 12px;
-}
-
 .checkbox {
   display: flex;
   align-items: center;

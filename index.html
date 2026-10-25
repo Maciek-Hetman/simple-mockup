@@ -170,18 +170,28 @@
 
           <section>
             <h2>Layout</h2>
-            <label class="field" data-show-when-mode="screenshot">
-              <span>Padding <output data-for="padding"></output></span>
-              <input type="range" name="padding" min="0" max="30" step="1" />
-            </label>
-            <label class="field" data-show-when-mode="code">
-              <span>Padding <output data-for="codePadding" data-unit="px"></output></span>
-              <input type="range" name="codePadding" min="0" max="160" step="4" />
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" name="shadow" />
-              <span>Drop shadow</span>
-            </label>
+            <div class="stack">
+              <label class="field" data-show-when-mode="screenshot">
+                <span>Horizontal padding <output data-for="paddingX"></output></span>
+                <input type="range" name="paddingX" min="0" max="30" step="1" />
+              </label>
+              <label class="field" data-show-when-mode="screenshot">
+                <span>Vertical padding <output data-for="paddingY"></output></span>
+                <input type="range" name="paddingY" min="0" max="30" step="1" />
+              </label>
+              <label class="field" data-show-when-mode="code">
+                <span>Horizontal padding <output data-for="codePaddingX" data-unit="px"></output></span>
+                <input type="range" name="codePaddingX" min="0" max="160" step="4" />
+              </label>
+              <label class="field" data-show-when-mode="code">
+                <span>Vertical padding <output data-for="codePaddingY" data-unit="px"></output></span>
+                <input type="range" name="codePaddingY" min="0" max="160" step="4" />
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="shadow" />
+                <span>Drop shadow</span>
+              </label>
+            </div>
           </section>
 
           <section>
