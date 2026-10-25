@@ -53,14 +53,16 @@
                 <span>Width <output data-for="codeWidth" data-unit=" columns"></output></span>
                 <input type="range" name="codeWidth" min="20" max="200" step="1" />
               </label>
-              <label class="checkbox">
-                <input type="checkbox" name="fitWidth" />
-                <span>Shrink to fit the code</span>
-              </label>
-              <label class="checkbox">
-                <input type="checkbox" name="lineNumbers" />
-                <span>Line numbers</span>
-              </label>
+              <div class="switches">
+                <label class="switch">
+                  <span>Shrink to fit</span>
+                  <input type="checkbox" name="fitWidth" role="switch" />
+                </label>
+                <label class="switch">
+                  <span>Line numbers</span>
+                  <input type="checkbox" name="lineNumbers" role="switch" />
+                </label>
+              </div>
             </div>
           </section>
 
@@ -80,28 +82,26 @@
                 <span>Title</span>
                 <input type="text" name="windowTitle" class="text-input" placeholder="e.g. main.ts" spellcheck="false" />
               </label>
-              <label class="checkbox">
-                <input type="checkbox" name="windowControls" />
+              <label class="switch">
                 <span>Window controls</span>
+                <input type="checkbox" name="windowControls" role="switch" />
               </label>
-              <div class="field">
-                <span>Border color</span>
-                <div
-                  class="color-picker"
-                  data-color-picker
-                  data-presets="#ffffff,#e4e4e7,#a1a1aa,#52525b,#18181b,#4f46e5,#ec4899,#f59e0b"
-                >
-                  <div class="swatches" role="group" aria-label="Preset border colors"></div>
-                  <div class="color-custom">
-                    <input type="color" name="codeBorderColor" aria-label="Border color" />
-                    <input type="text" class="hex" maxlength="7" spellcheck="false" aria-label="Border color hex value" />
-                  </div>
-                </div>
-              </div>
               <label class="field">
-                <span>Border width <output data-for="codeBorderWidth" data-unit="px"></output></span>
+                <span>Border <output data-for="codeBorderWidth" data-unit="px"></output></span>
                 <input type="range" name="codeBorderWidth" min="0" max="12" step="0.5" />
               </label>
+              <div
+                class="color-picker"
+                data-color-picker
+                data-presets="#ffffff,#e4e4e7,#a1a1aa,#52525b,#18181b,#4f46e5,#ec4899,#f59e0b"
+                data-show-when-nonzero="codeBorderWidth"
+              >
+                <div class="swatches" role="group" aria-label="Preset border colors"></div>
+                <div class="color-custom">
+                  <input type="color" name="codeBorderColor" aria-label="Border color" />
+                  <input type="text" class="hex" maxlength="7" spellcheck="false" aria-label="Border color hex value" />
+                </div>
+              </div>
               <label class="field">
                 <span>Corner radius <output data-for="codeRadius" data-unit="px"></output></span>
                 <input type="range" name="codeRadius" min="0" max="32" step="1" />
@@ -133,24 +133,22 @@
             </div>
 
             <div class="options" data-show-when-device="simple">
-              <div class="field">
-                <span>Border color</span>
-                <div
-                  class="color-picker"
-                  data-color-picker
-                  data-presets="#111111,#52525b,#a1a1aa,#ffffff,#4f46e5,#ef4444,#16a34a,#f59e0b"
-                >
-                  <div class="swatches" role="group" aria-label="Preset border colors"></div>
-                  <div class="color-custom">
-                    <input type="color" name="simpleColor" aria-label="Border color" />
-                    <input type="text" class="hex" maxlength="7" spellcheck="false" aria-label="Border color hex value" />
-                  </div>
-                </div>
-              </div>
               <label class="field">
-                <span>Border width <output data-for="simpleWidth"></output></span>
+                <span>Border <output data-for="simpleWidth"></output></span>
                 <input type="range" name="simpleWidth" min="0" max="10" step="0.1" />
               </label>
+              <div
+                class="color-picker"
+                data-color-picker
+                data-presets="#111111,#52525b,#a1a1aa,#ffffff,#4f46e5,#ef4444,#16a34a,#f59e0b"
+                data-show-when-nonzero="simpleWidth"
+              >
+                <div class="swatches" role="group" aria-label="Preset border colors"></div>
+                <div class="color-custom">
+                  <input type="color" name="simpleColor" aria-label="Border color" />
+                  <input type="text" class="hex" maxlength="7" spellcheck="false" aria-label="Border color hex value" />
+                </div>
+              </div>
               <label class="field">
                 <span>Corner radius <output data-for="simpleRadius"></output></span>
                 <input type="range" name="simpleRadius" min="0" max="20" step="0.5" />
@@ -171,42 +169,55 @@
           <section>
             <h2>Layout</h2>
             <div class="stack">
-              <div class="padding-group">
-                <div class="padding-sliders">
-                  <label class="field" data-show-when-mode="screenshot">
-                    <span>Horizontal padding <output data-for="paddingX"></output></span>
-                    <input type="range" name="paddingX" min="0" max="30" step="1" />
-                  </label>
-                  <label class="field" data-show-when-mode="screenshot">
-                    <span>Vertical padding <output data-for="paddingY"></output></span>
-                    <input type="range" name="paddingY" min="0" max="30" step="1" />
-                  </label>
-                  <label class="field" data-show-when-mode="code">
-                    <span>Horizontal padding <output data-for="codePaddingX" data-unit="px"></output></span>
-                    <input type="range" name="codePaddingX" min="0" max="160" step="4" />
-                  </label>
-                  <label class="field" data-show-when-mode="code">
-                    <span>Vertical padding <output data-for="codePaddingY" data-unit="px"></output></span>
-                    <input type="range" name="codePaddingY" min="0" max="160" step="4" />
+              <div class="padding-group" role="group" aria-labelledby="padding-label">
+                <div class="padding-header">
+                  <span id="padding-label">Padding</span>
+                  <label class="lock-toggle" title="Keep horizontal and vertical padding equal">
+                    <input type="checkbox" name="paddingLocked" aria-label="Lock horizontal and vertical padding" />
+                    <span>
+                      <svg class="lock-closed" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                        <rect x="3" y="7" width="10" height="7" rx="1.5" />
+                        <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+                      </svg>
+                      <svg class="lock-open" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                        <rect x="3" y="7" width="10" height="7" rx="1.5" />
+                        <path d="M10.5 7V4.5a2.5 2.5 0 0 0-5 0" />
+                      </svg>
+                    </span>
                   </label>
                 </div>
-                <label class="lock-toggle" title="Keep horizontal and vertical padding equal">
-                  <input type="checkbox" name="paddingLocked" aria-label="Lock horizontal and vertical padding" />
-                  <span>
-                    <svg class="lock-closed" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-                      <rect x="3" y="7" width="10" height="7" rx="1.5" />
-                      <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
-                    </svg>
-                    <svg class="lock-open" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-                      <rect x="3" y="7" width="10" height="7" rx="1.5" />
-                      <path d="M10.5 7V4.5a2.5 2.5 0 0 0-5 0" />
-                    </svg>
-                  </span>
+                <label class="slider-row" data-show-when-mode="screenshot" title="Horizontal padding">
+                  <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 3v10M14 3v10" /><rect x="5" y="4.5" width="6" height="7" rx="1" />
+                  </svg>
+                  <input type="range" name="paddingX" min="0" max="30" step="1" aria-label="Horizontal padding" />
+                  <output data-for="paddingX"></output>
+                </label>
+                <label class="slider-row" data-show-when-mode="screenshot" title="Vertical padding">
+                  <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 2h10M3 14h10" /><rect x="4.5" y="5" width="7" height="6" rx="1" />
+                  </svg>
+                  <input type="range" name="paddingY" min="0" max="30" step="1" aria-label="Vertical padding" />
+                  <output data-for="paddingY"></output>
+                </label>
+                <label class="slider-row" data-show-when-mode="code" title="Horizontal padding">
+                  <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 3v10M14 3v10" /><rect x="5" y="4.5" width="6" height="7" rx="1" />
+                  </svg>
+                  <input type="range" name="codePaddingX" min="0" max="160" step="4" aria-label="Horizontal padding" />
+                  <output data-for="codePaddingX" data-unit="px"></output>
+                </label>
+                <label class="slider-row" data-show-when-mode="code" title="Vertical padding">
+                  <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 2h10M3 14h10" /><rect x="4.5" y="5" width="7" height="6" rx="1" />
+                  </svg>
+                  <input type="range" name="codePaddingY" min="0" max="160" step="4" aria-label="Vertical padding" />
+                  <output data-for="codePaddingY" data-unit="px"></output>
                 </label>
               </div>
-              <label class="checkbox">
-                <input type="checkbox" name="shadow" />
+              <label class="switch">
                 <span>Drop shadow</span>
+                <input type="checkbox" name="shadow" role="switch" />
               </label>
             </div>
           </section>

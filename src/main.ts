@@ -181,6 +181,10 @@ function updateUi(): void {
   for (const el of form.querySelectorAll<HTMLElement>('[data-show-when-background]')) {
     el.hidden = el.dataset.showWhenBackground !== state.background;
   }
+  // A border color only matters once the border has a width.
+  for (const el of form.querySelectorAll<HTMLElement>('[data-show-when-nonzero]')) {
+    el.hidden = Number(input(el.dataset.showWhenNonzero!).value) === 0;
+  }
   for (const out of form.querySelectorAll<HTMLOutputElement>('output[data-for]')) {
     out.value = `${input(out.dataset.for!).value}${out.dataset.unit ?? '%'}`;
   }
