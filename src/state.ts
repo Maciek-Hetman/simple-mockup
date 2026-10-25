@@ -1,3 +1,6 @@
+import { THEMES, type Palette } from './code/themes.ts';
+
+export type Mode = 'screenshot' | 'code';
 export type Device = 'android' | 'iphone' | 'browser' | 'simple';
 export type BackgroundMode = 'none' | 'color' | 'image';
 export type ExportFormat = 'png' | 'jpeg';
@@ -24,7 +27,30 @@ export interface FrameOptions {
   islandSize: number;
 }
 
+/** Sizes are in CSS pixels; `scale` multiplies everything on export. */
+export interface CodeOptions {
+  text: string;
+  language: string;
+  /** A theme id, or `custom` for `customColors`. */
+  theme: string;
+  customColors: Palette;
+  /** Line length in columns; longer lines wrap. */
+  width: number;
+  /** Narrow the window to the longest line when that's shorter than `width`. */
+  fitWidth: boolean;
+  lineNumbers: boolean;
+  title: string;
+  windowControls: boolean;
+  borderColor: string;
+  borderWidth: number;
+  radius: number;
+  padding: number;
+  scale: number;
+}
+
 export interface MockupState extends FrameOptions {
+  mode: Mode;
+  code: CodeOptions;
   device: Device;
   /** Percentage of the framed device's shorter side. */
   padding: number;
@@ -34,7 +60,38 @@ export interface MockupState extends FrameOptions {
   format: ExportFormat;
 }
 
+const SAMPLE_CODE = `interface User {
+  id: number;
+  name: string;
+}
+
+// Fetch a user and greet them by name.
+export async function greet(id: number): Promise<string> {
+  const response = await fetch(\`/api/users/\${id}\`);
+  if (!response.ok) throw new Error(\`Request failed: \${response.status}\`);
+  const user: User = await response.json();
+  return \`Hello, \${user.name}!\`;
+}
+`;
+
 export const defaultState: MockupState = {
+  mode: 'screenshot',
+  code: {
+    text: SAMPLE_CODE,
+    language: 'typescript',
+    theme: THEMES[0].id,
+    customColors: { ...THEMES[0].colors },
+    width: 80,
+    fitWidth: true,
+    lineNumbers: false,
+    title: '',
+    windowControls: true,
+    borderColor: '#ffffff',
+    borderWidth: 0,
+    radius: 12,
+    padding: 48,
+    scale: 2,
+  },
   device: 'android',
   simple: { color: '#111111', width: 2, radius: 4 },
   browserAppearance: 'light',

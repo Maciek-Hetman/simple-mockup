@@ -201,6 +201,10 @@ h2 {
   gap: 6px;
 }
 
+.field[hidden] {
+  display: none;
+}
+
 .field > span {
   display: flex;
   justify-content: space-between;
@@ -256,7 +260,8 @@ h2 {
   gap: 8px;
 }
 
-.color-picker input[type='color'] {
+.color-picker input[type='color'],
+.palette-row input[type='color'] {
   width: 34px;
   height: 34px;
   padding: 0;
@@ -267,31 +272,119 @@ h2 {
   cursor: pointer;
 }
 
-.color-picker input[type='color']::-webkit-color-swatch-wrapper {
+.color-picker input[type='color']::-webkit-color-swatch-wrapper,
+.palette-row input[type='color']::-webkit-color-swatch-wrapper {
   padding: 0;
 }
 
 .color-picker input[type='color']::-webkit-color-swatch,
-.color-picker input[type='color']::-moz-color-swatch {
+.color-picker input[type='color']::-moz-color-swatch,
+.palette-row input[type='color']::-webkit-color-swatch,
+.palette-row input[type='color']::-moz-color-swatch {
   border: none;
 }
 
-.hex {
+.hex,
+.text-input,
+.select,
+.code-input {
   min-width: 0;
   height: 34px;
   padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--control);
+  background-color: var(--control);
   color: inherit;
   font: inherit;
+}
+
+.hex {
   font-variant-numeric: tabular-nums;
 }
 
-.hex:focus {
+.hex:focus,
+.text-input:focus,
+.select:focus,
+.code-input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+}
+
+.text-input,
+.select,
+.code-input {
+  width: 100%;
+}
+
+.select {
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  background-size: 12px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.code-input {
+  display: block;
+  height: auto;
+  min-height: 120px;
+  padding: 8px 10px;
+  font: 12px/1.5 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-ligatures: none;
+  white-space: pre;
+  tab-size: 4;
+  resize: vertical;
+}
+
+.stack {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+h2 + .stack {
+  margin-top: 0;
+}
+
+.palette-editor {
+  margin-top: 10px;
+}
+
+.palette-editor summary {
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.palette-editor summary:hover {
+  color: var(--text);
+}
+
+.palette {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.palette-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 84px;
+  align-items: center;
+  gap: 10px;
+}
+
+.palette-row input[type='color'] {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.palette-row .hex {
+  height: 28px;
+  padding: 0 8px;
 }
 
 section > .field + .checkbox {
@@ -319,11 +412,62 @@ section > .field + .checkbox {
 }
 
 .preview {
+  position: relative;
   display: flex;
   flex: 1;
   align-items: center;
   justify-content: center;
   min-height: 0;
+}
+
+/* While a resize handle is dragged, the canvas keeps its zoom level and may overflow. */
+.preview.resizing {
+  overflow: hidden;
+}
+
+.preview.resizing #canvas {
+  max-width: none;
+  max-height: none;
+}
+
+.resize-handle {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  margin-left: -8px;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.resize-handle[hidden] {
+  display: none;
+}
+
+.resize-handle::after {
+  content: '';
+  width: 4px;
+  height: min(48px, 60%);
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.preview:hover .resize-handle::after {
+  opacity: 0.45;
+}
+
+.preview .resize-handle:hover::after,
+.preview.resizing .resize-handle::after {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .resize-handle::after {
+    opacity: 0.45;
+  }
 }
 
 #canvas {

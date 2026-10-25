@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Wrap a screenshot in a simple phone or browser frame and export it as PNG or JPEG." />
+    <meta name="description" content="Wrap a screenshot in a simple phone or browser frame, or turn code into a highlighted image, and export it as PNG or JPEG." />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='8' y='2' width='16' height='28' rx='4' fill='%231c1c1e'/%3E%3Crect x='10' y='4' width='12' height='24' rx='2.5' fill='%236366f1'/%3E%3Crect x='13' y='5.5' width='6' height='1.8' rx='0.9' fill='%231c1c1e'/%3E%3C/svg%3E"
@@ -19,13 +19,97 @@
 
         <form id="controls" autocomplete="off">
           <section>
+            <div class="segmented" role="radiogroup" aria-label="Mode">
+              <label><input type="radio" name="mode" value="screenshot" /><span>Screenshot</span></label>
+              <label><input type="radio" name="mode" value="code" /><span>Code</span></label>
+            </div>
+          </section>
+
+          <section data-show-when-mode="screenshot">
             <h2>Screenshot</h2>
             <label class="button" for="screenshot-input">Upload screenshot</label>
             <input type="file" id="screenshot-input" accept="image/*" hidden />
             <p class="hint" id="screenshot-hint" hidden></p>
           </section>
 
-          <section>
+          <section data-show-when-mode="code">
+            <h2>Code</h2>
+            <textarea
+              name="code"
+              class="code-input"
+              rows="10"
+              wrap="off"
+              spellcheck="false"
+              autocapitalize="off"
+              aria-label="Code"
+            ></textarea>
+            <p class="hint" id="code-hint">Paste code or drop a file anywhere on the page.</p>
+            <div class="stack">
+              <label class="field">
+                <span>Language</span>
+                <select name="language" class="select"></select>
+              </label>
+              <label class="field">
+                <span>Width <output data-for="codeWidth" data-unit=" columns"></output></span>
+                <input type="range" name="codeWidth" min="20" max="200" step="1" />
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="fitWidth" />
+                <span>Shrink to fit the code</span>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="lineNumbers" />
+                <span>Line numbers</span>
+              </label>
+            </div>
+          </section>
+
+          <section data-show-when-mode="code">
+            <h2>Color scheme</h2>
+            <select name="theme" class="select" aria-label="Color scheme"></select>
+            <details class="palette-editor">
+              <summary>Customize colors</summary>
+              <div class="palette" id="palette"></div>
+            </details>
+          </section>
+
+          <section data-show-when-mode="code">
+            <h2>Window</h2>
+            <div class="stack">
+              <label class="field">
+                <span>Title</span>
+                <input type="text" name="windowTitle" class="text-input" placeholder="e.g. main.ts" spellcheck="false" />
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="windowControls" />
+                <span>Window controls</span>
+              </label>
+              <div class="field">
+                <span>Border color</span>
+                <div
+                  class="color-picker"
+                  data-color-picker
+                  data-presets="#ffffff,#e4e4e7,#a1a1aa,#52525b,#18181b,#4f46e5,#ec4899,#f59e0b"
+                >
+                  <div class="swatches" role="group" aria-label="Preset border colors"></div>
+                  <div class="color-custom">
+                    <input type="color" name="codeBorderColor" aria-label="Border color" />
+                    <input type="text" class="hex" maxlength="7" spellcheck="false" aria-label="Border color hex value" />
+                  </div>
+                </div>
+              </div>
+              <label class="field">
+                <span>Border width <output data-for="codeBorderWidth" data-unit="px"></output></span>
+                <input type="range" name="codeBorderWidth" min="0" max="12" step="0.5" />
+              </label>
+              <label class="field">
+                <span>Corner radius <output data-for="codeRadius" data-unit="px"></output></span>
+                <input type="range" name="codeRadius" min="0" max="32" step="1" />
+              </label>
+            </div>
+          </section>
+
+          <section data-show-when-mode="screenshot">
             <h2>Device</h2>
             <div class="segmented segmented-2x2" role="radiogroup" aria-label="Device">
               <label><input type="radio" name="device" value="android" /><span>Android</span></label>
@@ -86,9 +170,13 @@
 
           <section>
             <h2>Layout</h2>
-            <label class="field">
+            <label class="field" data-show-when-mode="screenshot">
               <span>Padding <output data-for="padding"></output></span>
               <input type="range" name="padding" min="0" max="30" step="1" />
+            </label>
+            <label class="field" data-show-when-mode="code">
+              <span>Padding <output data-for="codePadding" data-unit="px"></output></span>
+              <input type="range" name="codePadding" min="0" max="160" step="4" />
             </label>
             <label class="checkbox">
               <input type="checkbox" name="shadow" />
@@ -131,6 +219,14 @@
               <label><input type="radio" name="format" value="png" /><span>PNG</span></label>
               <label><input type="radio" name="format" value="jpeg" /><span>JPEG</span></label>
             </div>
+            <div class="options" data-show-when-mode="code">
+              <div class="segmented" role="radiogroup" aria-label="Export size">
+                <label><input type="radio" name="codeScale" value="1" /><span>1x</span></label>
+                <label><input type="radio" name="codeScale" value="2" /><span>2x</span></label>
+                <label><input type="radio" name="codeScale" value="3" /><span>3x</span></label>
+                <label><input type="radio" name="codeScale" value="4" /><span>4x</span></label>
+              </div>
+            </div>
             <p class="hint warning" id="jpeg-hint" hidden>
               JPEG doesn't support transparency, so the background will be white.
             </p>
@@ -164,7 +260,7 @@
           <span id="sample-note">Showing a sample screenshot.</span>
           <span id="dimensions"></span>
         </p>
-        <div class="drop-overlay" id="drop-overlay">Drop to use as screenshot</div>
+        <div class="drop-overlay" id="drop-overlay">Drop an image or a code file</div>
       </main>
     </div>
 

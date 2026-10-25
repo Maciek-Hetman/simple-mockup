@@ -9,11 +9,11 @@ function normalizeHex(value: string): string | null {
   return `#${full}`;
 }
 
-/** Wires up one `[data-color-picker]`: preset swatches, the native picker and a hex field. */
+/** Wires up one `[data-color-picker]`: optional preset swatches, the native picker and a hex field. */
 function setUpPicker(picker: HTMLElement): () => void {
   const colorInput = picker.querySelector<HTMLInputElement>('input[type="color"]')!;
   const hexInput = picker.querySelector<HTMLInputElement>('.hex')!;
-  const swatchList = picker.querySelector<HTMLElement>('.swatches')!;
+  const swatchList = picker.querySelector<HTMLElement>('.swatches');
 
   const setColor = (color: string) => {
     colorInput.value = color;
@@ -32,7 +32,7 @@ function setUpPicker(picker: HTMLElement): () => void {
       swatch.setAttribute('aria-label', color);
       swatch.style.setProperty('--swatch', color);
       swatch.addEventListener('click', () => setColor(color));
-      swatchList.append(swatch);
+      swatchList?.append(swatch);
       return { swatch, color };
     });
 
