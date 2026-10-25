@@ -387,8 +387,55 @@ h2 + .stack {
   padding: 0 8px;
 }
 
-section > .field + .checkbox {
-  margin-top: 12px;
+.padding-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.padding-sliders {
+  display: grid;
+  flex: 1;
+  gap: 12px;
+}
+
+.lock-toggle {
+  position: relative;
+}
+
+.lock-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lock-toggle span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.lock-toggle span:hover {
+  background: var(--control);
+  color: var(--text);
+}
+
+.lock-toggle input:checked + span {
+  color: var(--accent);
+}
+
+.lock-toggle input:focus-visible + span {
+  outline: 2px solid var(--accent);
+}
+
+.lock-toggle input:checked + span .lock-open,
+.lock-toggle input:not(:checked) + span .lock-closed {
+  display: none;
 }
 
 .checkbox {

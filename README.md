@@ -11,7 +11,7 @@ Wrap a screenshot in a phone or browser frame, or turn a code snippet into a hig
   - Drag the window edges (or use the width slider) to resize; long lines wrap at spaces, commas, brackets, and method chains before breaking words, and continuation lines are indented
   - Line numbers, window title and controls, border color and width, corner radius
   - Export at 1x to 4x
-- Adjustable padding, shadow, and background (none, solid color, or image)
+- Adjustable horizontal and vertical padding (or locked together), shadow, and background (none, solid color, or image)
 - Export as PNG or JPEG with a custom file name
 
 ## Development

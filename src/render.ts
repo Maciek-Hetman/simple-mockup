@@ -12,8 +12,10 @@ export interface Subject {
   height: number;
   /** Outer corner radius, for the shadow. */
   radius: number;
-  /** Space around the subject, on every side. */
-  padding: number;
+  /** Space left and right of the subject. */
+  paddingX: number;
+  /** Space above and below the subject. */
+  paddingY: number;
   /** Canvas pixels per unit, unless the canvas size limits force fewer. */
   pixelRatio: number;
   draw(ctx: CanvasRenderingContext2D, outer: Rect): void;
@@ -30,11 +32,13 @@ export function screenshotSubject(state: MockupState, shot: Picture): Subject {
   const insets = frame.insets(shot.width, shot.height, state);
   const width = shot.width + insets.left + insets.right;
   const height = shot.height + insets.top + insets.bottom;
+  const unit = Math.min(width, height) / 100;
   return {
     width,
     height,
     radius: insets.radius,
-    padding: Math.round((Math.min(width, height) * state.padding) / 100),
+    paddingX: Math.round(unit * state.paddingX),
+    paddingY: Math.round(unit * state.paddingY),
     pixelRatio: 1,
     draw(ctx, outer) {
       const screen: Rect = {
@@ -54,9 +58,9 @@ export function render(
   subject: Subject,
   background: Picture | null,
 ): Placement {
-  const pad = subject.padding;
-  const fullW = subject.width + 2 * pad;
-  const fullH = subject.height + 2 * pad;
+  const { paddingX, paddingY } = subject;
+  const fullW = subject.width + 2 * paddingX;
+  const fullH = subject.height + 2 * paddingY;
   const scale = Math.min(
     subject.pixelRatio,
     MAX_SIDE / Math.max(fullW, fullH),
@@ -71,7 +75,7 @@ export function render(
 
   drawBackground(ctx, state, background, fullW, fullH);
 
-  const outer: Rect = { x: pad, y: pad, w: subject.width, h: subject.height };
+  const outer: Rect = { x: paddingX, y: paddingY, w: subject.width, h: subject.height };
   if (state.shadow) drawShadow(ctx, outer, subject.radius, scale);
   subject.draw(ctx, outer);
   return { outer, scale };

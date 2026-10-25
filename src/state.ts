@@ -44,7 +44,8 @@ export interface CodeOptions {
   borderColor: string;
   borderWidth: number;
   radius: number;
-  padding: number;
+  paddingX: number;
+  paddingY: number;
   scale: number;
 }
 
@@ -52,8 +53,11 @@ export interface MockupState extends FrameOptions {
   mode: Mode;
   code: CodeOptions;
   device: Device;
-  /** Percentage of the framed device's shorter side. */
-  padding: number;
+  /** Percentages of the framed device's shorter side, so equal values give equal space. */
+  paddingX: number;
+  paddingY: number;
+  /** Keep horizontal and vertical padding equal. */
+  paddingLocked: boolean;
   shadow: boolean;
   background: BackgroundMode;
   backgroundColor: string;
@@ -89,7 +93,8 @@ export const defaultState: MockupState = {
     borderColor: '#ffffff',
     borderWidth: 0,
     radius: 12,
-    padding: 48,
+    paddingX: 48,
+    paddingY: 48,
     scale: 2,
   },
   device: 'android',
@@ -97,7 +102,9 @@ export const defaultState: MockupState = {
   browserAppearance: 'light',
   punchHoleSize: 100,
   islandSize: 100,
-  padding: 10,
+  paddingX: 10,
+  paddingY: 10,
+  paddingLocked: true,
   shadow: true,
   background: 'color',
   backgroundColor: '#e0e7ff',

@@ -95,7 +95,8 @@ function writeForm(s: MockupState): void {
   input('codeBorderColor').value = s.code.borderColor;
   input('codeBorderWidth').value = String(s.code.borderWidth);
   input('codeRadius').value = String(s.code.radius);
-  input('codePadding').value = String(s.code.padding);
+  input('codePaddingX').value = String(s.code.paddingX);
+  input('codePaddingY').value = String(s.code.paddingY);
   radios('codeScale').value = String(s.code.scale);
   radios('device').value = s.device;
   input('simpleColor').value = s.simple.color;
@@ -104,7 +105,9 @@ function writeForm(s: MockupState): void {
   radios('browserAppearance').value = s.browserAppearance;
   input('punchHoleSize').value = String(s.punchHoleSize);
   input('islandSize').value = String(s.islandSize);
-  input('padding').value = String(s.padding);
+  input('paddingX').value = String(s.paddingX);
+  input('paddingY').value = String(s.paddingY);
+  input('paddingLocked').checked = s.paddingLocked;
   input('shadow').checked = s.shadow;
   radios('background').value = s.background;
   input('backgroundColor').value = s.backgroundColor;
@@ -126,7 +129,8 @@ function readForm(): void {
     borderColor: input('codeBorderColor').value,
     borderWidth: Number(input('codeBorderWidth').value),
     radius: Number(input('codeRadius').value),
-    padding: Number(input('codePadding').value),
+    paddingX: Number(input('codePaddingX').value),
+    paddingY: Number(input('codePaddingY').value),
     scale: Number(radios('codeScale').value),
   };
   state.device = radios('device').value as Device;
@@ -138,11 +142,33 @@ function readForm(): void {
   state.browserAppearance = radios('browserAppearance').value as Appearance;
   state.punchHoleSize = Number(input('punchHoleSize').value);
   state.islandSize = Number(input('islandSize').value);
-  state.padding = Number(input('padding').value);
+  state.paddingX = Number(input('paddingX').value);
+  state.paddingY = Number(input('paddingY').value);
+  state.paddingLocked = input('paddingLocked').checked;
   state.shadow = input('shadow').checked;
   state.background = radios('background').value as BackgroundMode;
   state.backgroundColor = input('backgroundColor').value;
   state.format = radios('format').value as ExportFormat;
+}
+
+/** Each padding slider and the one that follows it while padding is locked. */
+const PADDING_PARTNERS = new Map([
+  ['paddingX', 'paddingY'],
+  ['paddingY', 'paddingX'],
+  ['codePaddingX', 'codePaddingY'],
+  ['codePaddingY', 'codePaddingX'],
+]);
+
+function syncLockedPadding(target: HTMLInputElement): void {
+  if (!input('paddingLocked').checked) return;
+  if (target.name === 'paddingLocked') {
+    // Locking evens vertical padding out to match horizontal.
+    input('paddingY').value = input('paddingX').value;
+    input('codePaddingY').value = input('codePaddingX').value;
+    return;
+  }
+  const partner = PADDING_PARTNERS.get(target.name);
+  if (partner) input(partner).value = target.value;
 }
 
 function updateUi(): void {
@@ -318,6 +344,7 @@ form.addEventListener('input', (event) => {
     state.code.customColors = readPalette();
     select('theme').value = CUSTOM_THEME;
   }
+  if (event.target instanceof HTMLInputElement) syncLockedPadding(event.target);
   update();
 });
 form.addEventListener('change', update);
