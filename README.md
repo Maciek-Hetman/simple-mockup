@@ -6,13 +6,13 @@ Wrap a screenshot in a phone or browser frame, or turn a code snippet into a hig
 
 - Frames: Android, iPhone, browser window, or a plain rounded border
 - Code screenshots:
+  - An editor with line numbers next to the preview; paste code, open a file, or drop one on the page
   - Syntax highlighting for 30+ languages, picked automatically when you drop a file
   - 11 color schemes, or your own: edit any color and it becomes a custom scheme
   - Drag the window edges (or use the width slider) to resize; long lines wrap at spaces, commas, brackets, and method chains before breaking words, and continuation lines are indented
   - Line numbers, window title and controls, border color and width, corner radius
-  - Export at 1x to 4x
 - Adjustable horizontal and vertical padding (or locked together), shadow, and background (none, solid color, or image)
-- Export as PNG or JPEG with a custom file name
+- Export as PNG or JPEG with a custom file name, and code at 1x to 4x
 
 ## Development
 
@@ -27,7 +27,7 @@ npm run preview   # serve the production build locally
 
 ## Project layout
 
-- `index.html` - sidebar markup and the preview canvas
+- `index.html` - page markup: top bar, code editor, settings inspector, preview canvas, and export dialog
 - `src/main.ts` - app wiring: form state, uploads, download
 - `src/render.ts` - composes the framed screenshot or code window and the background onto the canvas
 - `src/frames/` - one renderer per device frame

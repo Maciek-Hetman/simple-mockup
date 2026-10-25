@@ -24,6 +24,8 @@ const preview = document.querySelector<HTMLElement>('.preview')!;
 const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!;
 const codeInput = form.elements.namedItem('code') as HTMLTextAreaElement;
 const codeHint = document.querySelector<HTMLElement>('#code-hint')!;
+const gutter = document.querySelector<HTMLElement>('#gutter')!;
+const codeFileInput = document.querySelector<HTMLInputElement>('#code-file-input')!;
 const paletteList = document.querySelector<HTMLElement>('#palette')!;
 const screenshotInput = document.querySelector<HTMLInputElement>('#screenshot-input')!;
 const backgroundInput = document.querySelector<HTMLInputElement>('#background-input')!;
@@ -32,6 +34,7 @@ const backgroundHint = document.querySelector<HTMLElement>('#background-hint')!;
 const jpegHint = document.querySelector<HTMLElement>('#jpeg-hint')!;
 const sampleNote = document.querySelector<HTMLElement>('#sample-note')!;
 const dimensions = document.querySelector<HTMLElement>('#dimensions')!;
+const exportSize = document.querySelector<HTMLElement>('#export-size')!;
 const downloadButton = document.querySelector<HTMLButtonElement>('#download')!;
 const saveDialog = document.querySelector<HTMLDialogElement>('#save-dialog')!;
 const saveCancel = document.querySelector<HTMLButtonElement>('#save-cancel')!;
@@ -171,21 +174,42 @@ function syncLockedPadding(target: HTMLInputElement): void {
   if (partner) input(partner).value = target.value;
 }
 
+let gutterLines = 0;
+
+/** Numbers the editor's lines. The textarea doesn't wrap, so each line is one row. */
+function updateGutter(): void {
+  const lines = codeInput.value.split('\n').length;
+  if (lines !== gutterLines) {
+    gutterLines = lines;
+    gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+  }
+  gutter.scrollTop = codeInput.scrollTop;
+}
+
 function updateUi(): void {
-  for (const el of form.querySelectorAll<HTMLElement>('[data-show-when-mode]')) {
+  // The layout depends on the mode: code mode adds the editor column.
+  form.dataset.mode = state.mode;
+  // Not just the form's own subtree: the export settings are in the save dialog.
+  for (const el of document.querySelectorAll<HTMLElement>('[data-show-when-mode]')) {
     el.hidden = el.dataset.showWhenMode !== state.mode;
   }
-  for (const el of form.querySelectorAll<HTMLElement>('[data-show-when-device]')) {
+  for (const el of document.querySelectorAll<HTMLElement>('[data-show-when-device]')) {
     el.hidden = el.dataset.showWhenDevice !== state.device;
   }
-  for (const el of form.querySelectorAll<HTMLElement>('[data-show-when-background]')) {
+  for (const el of document.querySelectorAll<HTMLElement>('[data-show-when-background]')) {
     el.hidden = el.dataset.showWhenBackground !== state.background;
+  }
+  // A border color only matters once the border has a width.
+  for (const el of document.querySelectorAll<HTMLElement>('[data-show-when-nonzero]')) {
+    el.hidden = Number(input(el.dataset.showWhenNonzero!).value) === 0;
   }
   for (const out of form.querySelectorAll<HTMLOutputElement>('output[data-for]')) {
     out.value = `${input(out.dataset.for!).value}${out.dataset.unit ?? '%'}`;
   }
   writePalette(paletteFor(state.code.theme, state.code.customColors));
   syncColorPickers();
+  updateGutter();
+  fileNameExtension.textContent = `.${EXTENSIONS[state.format]}`;
 
   const transparent =
     state.background === 'none' || (state.background === 'image' && !backgroundImage);
@@ -251,6 +275,7 @@ function renderNow(): void {
     placeResizeHandles(null);
   }
   dimensions.textContent = `${canvas.width} × ${canvas.height} px`;
+  exportSize.textContent = dimensions.textContent;
 }
 
 let renderQueued = false;
@@ -349,6 +374,17 @@ form.addEventListener('input', (event) => {
 });
 form.addEventListener('change', update);
 form.addEventListener('submit', (event) => event.preventDefault());
+// Format and scale belong to the form but sit in the dialog, so their events bubble up there.
+saveDialog.addEventListener('change', update);
+
+codeInput.addEventListener('scroll', () => {
+  gutter.scrollTop = codeInput.scrollTop;
+});
+
+// Buttons that open a hidden file input, so the picker is reachable from the keyboard.
+for (const button of document.querySelectorAll<HTMLButtonElement>('button[data-opens]')) {
+  button.addEventListener('click', () => document.querySelector<HTMLInputElement>(button.dataset.opens!)!.click());
+}
 
 screenshotInput.addEventListener('change', () => {
   const file = firstImage(screenshotInput.files);
@@ -360,6 +396,12 @@ backgroundInput.addEventListener('change', () => {
   const file = firstImage(backgroundInput.files);
   if (file) void setBackgroundImage(file);
   backgroundInput.value = '';
+});
+
+codeFileInput.addEventListener('change', () => {
+  const file = codeFileInput.files?.[0];
+  if (file) void loadCodeFile(file);
+  codeFileInput.value = '';
 });
 
 /** Pastes into these go to the field itself instead of replacing the code. */
@@ -417,7 +459,6 @@ function suggestedFileName(): string {
 
 downloadButton.addEventListener('click', () => {
   fileNameInput.value = suggestedFileName();
-  fileNameExtension.textContent = `.${EXTENSIONS[state.format]}`;
   saveDialog.returnValue = '';
   saveDialog.showModal();
   fileNameInput.select();
