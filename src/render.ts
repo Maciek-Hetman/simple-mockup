@@ -6,21 +6,59 @@ import type { MockupState, Picture } from './state.ts';
 const MAX_SIDE = 16384;
 const MAX_AREA = 36_000_000;
 
+/** What sits on the background: a framed screenshot or a code window. */
+export interface Subject {
+  width: number;
+  height: number;
+  /** Outer corner radius, for the shadow. */
+  radius: number;
+  /** Space around the subject, on every side. */
+  padding: number;
+  /** Canvas pixels per unit, unless the canvas size limits force fewer. */
+  pixelRatio: number;
+  draw(ctx: CanvasRenderingContext2D, outer: Rect): void;
+}
+
+/** Where the subject landed, in subject units, and how many canvas pixels make one unit. */
+export interface Placement {
+  outer: Rect;
+  scale: number;
+}
+
+export function screenshotSubject(state: MockupState, shot: Picture): Subject {
+  const frame = frames[state.device];
+  const insets = frame.insets(shot.width, shot.height, state);
+  const width = shot.width + insets.left + insets.right;
+  const height = shot.height + insets.top + insets.bottom;
+  return {
+    width,
+    height,
+    radius: insets.radius,
+    padding: Math.round((Math.min(width, height) * state.padding) / 100),
+    pixelRatio: 1,
+    draw(ctx, outer) {
+      const screen: Rect = {
+        x: outer.x + insets.left,
+        y: outer.y + insets.top,
+        w: shot.width,
+        h: shot.height,
+      };
+      frame.draw(ctx, outer, screen, shot.source, state);
+    },
+  };
+}
+
 export function render(
   canvas: HTMLCanvasElement,
   state: MockupState,
-  shot: Picture,
+  subject: Subject,
   background: Picture | null,
-): void {
-  const frame = frames[state.device];
-  const insets = frame.insets(shot.width, shot.height, state);
-  const frameW = shot.width + insets.left + insets.right;
-  const frameH = shot.height + insets.top + insets.bottom;
-  const pad = Math.round((Math.min(frameW, frameH) * state.padding) / 100);
-  const fullW = frameW + 2 * pad;
-  const fullH = frameH + 2 * pad;
+): Placement {
+  const pad = subject.padding;
+  const fullW = subject.width + 2 * pad;
+  const fullH = subject.height + 2 * pad;
   const scale = Math.min(
-    1,
+    subject.pixelRatio,
     MAX_SIDE / Math.max(fullW, fullH),
     Math.sqrt(MAX_AREA / (fullW * fullH)),
   );
@@ -33,10 +71,10 @@ export function render(
 
   drawBackground(ctx, state, background, fullW, fullH);
 
-  const outer: Rect = { x: pad, y: pad, w: frameW, h: frameH };
-  const screen: Rect = { x: pad + insets.left, y: pad + insets.top, w: shot.width, h: shot.height };
-  if (state.shadow) drawShadow(ctx, outer, insets.radius, scale);
-  frame.draw(ctx, outer, screen, shot.source, state);
+  const outer: Rect = { x: pad, y: pad, w: subject.width, h: subject.height };
+  if (state.shadow) drawShadow(ctx, outer, subject.radius, scale);
+  subject.draw(ctx, outer);
+  return { outer, scale };
 }
 
 function drawBackground(

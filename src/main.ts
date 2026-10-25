@@ -1,7 +1,12 @@
+import '@fontsource/jetbrains-mono/400.css';
 import './style.css';
+import { LANGUAGES, languageForFile } from './code/languages.ts';
+import { CUSTOM_THEME, paletteFor, SLOT_LABELS, SLOTS, THEMES, type Palette, type Slot } from './code/themes.ts';
+import { CODE_FONT, codeSubject, type CodeSubject } from './code/window.ts';
 import { initColorPickers } from './color-picker.ts';
 import { cleanFileName, downloadCanvas, EXTENSIONS } from './export.ts';
-import { render } from './render.ts';
+import { render, screenshotSubject, type Placement } from './render.ts';
+import { initResizeHandles } from './resize-handles.ts';
 import { samplePicture } from './sample.ts';
 import {
   defaultState,
@@ -10,11 +15,16 @@ import {
   type Device,
   type ExportFormat,
   type MockupState,
+  type Mode,
   type Picture,
 } from './state.ts';
 
 const form = document.querySelector<HTMLFormElement>('#controls')!;
+const preview = document.querySelector<HTMLElement>('.preview')!;
 const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!;
+const codeInput = form.elements.namedItem('code') as HTMLTextAreaElement;
+const codeHint = document.querySelector<HTMLElement>('#code-hint')!;
+const paletteList = document.querySelector<HTMLElement>('#palette')!;
 const screenshotInput = document.querySelector<HTMLInputElement>('#screenshot-input')!;
 const backgroundInput = document.querySelector<HTMLInputElement>('#background-input')!;
 const screenshotHint = document.querySelector<HTMLElement>('#screenshot-hint')!;
@@ -31,15 +41,62 @@ const fileNameExtension = document.querySelector<HTMLElement>('#file-name-extens
 const state: MockupState = structuredClone(defaultState);
 let screenshot: (Picture & { name: string }) | null = null;
 let backgroundImage: (Picture & { name: string }) | null = null;
-/** The name the user last saved under, until a new screenshot comes in. */
+/** The name the user last saved under, until a new screenshot or code file comes in. */
 let lastFileName: string | null = null;
+/** The last code window drawn and where it landed, for the resize handles. */
+let lastCode: { subject: CodeSubject; placement: Placement } | null = null;
 
-const syncColorPickers = initColorPickers(form);
+const CODE_HINT = codeHint.textContent ?? '';
+const MAX_CODE_FILE_SIZE = 1_000_000;
 
 const input = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
 const radios = (name: string) => form.elements.namedItem(name) as RadioNodeList;
+const select = (name: string) => form.elements.namedItem(name) as HTMLSelectElement;
+
+select('language').append(...LANGUAGES.map(({ id, label }) => new Option(label, id)));
+const themeGroup = (label: string, dark: boolean) => {
+  const group = document.createElement('optgroup');
+  group.label = label;
+  group.append(...THEMES.filter((theme) => theme.dark === dark).map(({ id, name }) => new Option(name, id)));
+  return group;
+};
+select('theme').append(themeGroup('Dark', true), themeGroup('Light', false), new Option('Custom', CUSTOM_THEME));
+
+paletteList.innerHTML = SLOTS.map(
+  (slot) => `
+    <div class="palette-row" data-color-picker>
+      <input type="color" data-slot="${slot}" aria-label="${SLOT_LABELS[slot]} color" />
+      <span>${SLOT_LABELS[slot]}</span>
+      <input type="text" class="hex" maxlength="7" spellcheck="false" aria-label="${SLOT_LABELS[slot]} hex value" />
+    </div>`,
+).join('');
+const paletteInputs = paletteList.querySelectorAll<HTMLInputElement>('input[data-slot]');
+
+function readPalette(): Palette {
+  return Object.fromEntries(Array.from(paletteInputs, (el) => [el.dataset.slot, el.value])) as Palette;
+}
+
+function writePalette(palette: Palette): void {
+  for (const el of paletteInputs) el.value = palette[el.dataset.slot as Slot];
+}
+
+const syncColorPickers = initColorPickers(form);
 
 function writeForm(s: MockupState): void {
+  radios('mode').value = s.mode;
+  codeInput.value = s.code.text;
+  select('language').value = s.code.language;
+  input('codeWidth').value = String(s.code.width);
+  input('fitWidth').checked = s.code.fitWidth;
+  input('lineNumbers').checked = s.code.lineNumbers;
+  select('theme').value = s.code.theme;
+  input('windowTitle').value = s.code.title;
+  input('windowControls').checked = s.code.windowControls;
+  input('codeBorderColor').value = s.code.borderColor;
+  input('codeBorderWidth').value = String(s.code.borderWidth);
+  input('codeRadius').value = String(s.code.radius);
+  input('codePadding').value = String(s.code.padding);
+  radios('codeScale').value = String(s.code.scale);
   radios('device').value = s.device;
   input('simpleColor').value = s.simple.color;
   input('simpleWidth').value = String(s.simple.width);
@@ -55,6 +112,23 @@ function writeForm(s: MockupState): void {
 }
 
 function readForm(): void {
+  state.mode = radios('mode').value as Mode;
+  state.code = {
+    text: codeInput.value,
+    language: select('language').value,
+    theme: select('theme').value,
+    customColors: state.code.customColors,
+    width: Number(input('codeWidth').value),
+    fitWidth: input('fitWidth').checked,
+    lineNumbers: input('lineNumbers').checked,
+    title: input('windowTitle').value,
+    windowControls: input('windowControls').checked,
+    borderColor: input('codeBorderColor').value,
+    borderWidth: Number(input('codeBorderWidth').value),
+    radius: Number(input('codeRadius').value),
+    padding: Number(input('codePadding').value),
+    scale: Number(radios('codeScale').value),
+  };
   state.device = radios('device').value as Device;
   state.simple = {
     color: input('simpleColor').value,
@@ -72,6 +146,9 @@ function readForm(): void {
 }
 
 function updateUi(): void {
+  for (const el of form.querySelectorAll<HTMLElement>('[data-show-when-mode]')) {
+    el.hidden = el.dataset.showWhenMode !== state.mode;
+  }
   for (const el of form.querySelectorAll<HTMLElement>('[data-show-when-device]')) {
     el.hidden = el.dataset.showWhenDevice !== state.device;
   }
@@ -79,15 +156,16 @@ function updateUi(): void {
     el.hidden = el.dataset.showWhenBackground !== state.background;
   }
   for (const out of form.querySelectorAll<HTMLOutputElement>('output[data-for]')) {
-    out.value = `${input(out.dataset.for!).value}%`;
+    out.value = `${input(out.dataset.for!).value}${out.dataset.unit ?? '%'}`;
   }
+  writePalette(paletteFor(state.code.theme, state.code.customColors));
   syncColorPickers();
 
   const transparent =
     state.background === 'none' || (state.background === 'image' && !backgroundImage);
   jpegHint.hidden = !(state.format === 'jpeg' && transparent);
 
-  sampleNote.hidden = screenshot !== null;
+  sampleNote.hidden = screenshot !== null || state.mode === 'code';
   if (screenshot) {
     setHint(screenshotHint, `Using ${screenshot.name} (${screenshot.width} × ${screenshot.height}).`);
   }
@@ -100,8 +178,52 @@ function setHint(el: HTMLElement, text: string, warning = false): void {
   el.classList.toggle('warning', warning);
 }
 
+const placeResizeHandles = initResizeHandles(preview, canvas, {
+  start() {
+    if (!lastCode) return null;
+    const { subject, placement } = lastCode;
+    return {
+      columns: Math.round(subject.contentWidth / subject.charWidth),
+      columnWidth: subject.charWidth * placement.scale,
+    };
+  },
+  resize(columns) {
+    input('codeWidth').value = String(columns);
+    input('fitWidth').checked = false;
+    update();
+  },
+});
+
+let fontLoading = false;
+
+/** Text measured before the code font loads comes out wrong, so render again once it has. */
+function ensureCodeFont(text: string): void {
+  if (fontLoading || document.fonts.check(CODE_FONT, text)) return;
+  fontLoading = true;
+  document.fonts
+    .load(CODE_FONT, text)
+    .then(() => {
+      if (document.fonts.check(CODE_FONT, text)) scheduleRender();
+    })
+    .catch(() => {})
+    .finally(() => {
+      fontLoading = false;
+    });
+}
+
 function renderNow(): void {
-  render(canvas, state, screenshot ?? samplePicture(state.device), backgroundImage);
+  if (state.mode === 'code') {
+    ensureCodeFont(state.code.text);
+    const subject = codeSubject(state.code);
+    const placement = render(canvas, state, subject, backgroundImage);
+    lastCode = { subject, placement };
+    const { outer, scale } = placement;
+    placeResizeHandles({ x: outer.x * scale, y: outer.y * scale, w: outer.w * scale, h: outer.h * scale });
+  } else {
+    render(canvas, state, screenshotSubject(state, screenshot ?? samplePicture(state.device)), backgroundImage);
+    lastCode = null;
+    placeResizeHandles(null);
+  }
   dimensions.textContent = `${canvas.width} × ${canvas.height} px`;
 }
 
@@ -130,15 +252,48 @@ function closePicture(picture: Picture | null): void {
   if (picture?.source instanceof ImageBitmap) picture.source.close();
 }
 
+function showMode(mode: Mode): void {
+  radios('mode').value = mode;
+  update();
+}
+
 async function setScreenshot(file: File): Promise<void> {
   try {
     const picture = await loadPicture(file);
     closePicture(screenshot);
     screenshot = picture;
     lastFileName = null;
-    update();
+    showMode('screenshot');
   } catch {
+    showMode('screenshot');
     setHint(screenshotHint, `Couldn't read ${file.name} as an image.`, true);
+  }
+}
+
+function setCode(text: string, fileName?: string): void {
+  codeInput.value = text;
+  if (fileName) {
+    const language = languageForFile(fileName);
+    if (language) select('language').value = language;
+    input('windowTitle').value = fileName;
+    lastFileName = null;
+  }
+  setHint(codeHint, CODE_HINT);
+  showMode('code');
+}
+
+async function loadCodeFile(file: File): Promise<void> {
+  const fail = (message: string) => {
+    showMode('code');
+    setHint(codeHint, message, true);
+  };
+  if (file.size > MAX_CODE_FILE_SIZE) return fail(`${file.name} is over 1 MB, which is too much code for one image.`);
+  try {
+    const text = await file.text();
+    if (text.includes('\0')) return fail(`${file.name} doesn't look like a text file.`);
+    setCode(text, file.name);
+  } catch {
+    fail(`Couldn't read ${file.name}.`);
   }
 }
 
@@ -157,7 +312,14 @@ function firstImage(files: FileList | undefined | null): File | undefined {
   return Array.from(files ?? []).find((file) => file.type.startsWith('image/'));
 }
 
-form.addEventListener('input', update);
+form.addEventListener('input', (event) => {
+  if (event.target instanceof HTMLInputElement && event.target.dataset.slot) {
+    // Editing any color turns the current scheme into a custom one.
+    state.code.customColors = readPalette();
+    select('theme').value = CUSTOM_THEME;
+  }
+  update();
+});
 form.addEventListener('change', update);
 form.addEventListener('submit', (event) => event.preventDefault());
 
@@ -173,11 +335,21 @@ backgroundInput.addEventListener('change', () => {
   backgroundInput.value = '';
 });
 
+/** Pastes into these go to the field itself instead of replacing the code. */
+const TEXT_FIELDS = 'textarea, input[type="text"], [contenteditable]';
+
 window.addEventListener('paste', (event) => {
   const file = firstImage(event.clipboardData?.files);
-  if (!file) return;
+  if (file) {
+    event.preventDefault();
+    void setScreenshot(file);
+    return;
+  }
+  const text = event.clipboardData?.getData('text/plain');
+  const inTextField = event.target instanceof Element && event.target.closest(TEXT_FIELDS);
+  if (state.mode !== 'code' || !text || inTextField) return;
   event.preventDefault();
-  void setScreenshot(file);
+  setCode(text);
 });
 
 let dragDepth = 0;
@@ -203,12 +375,15 @@ window.addEventListener('drop', (event) => {
   event.preventDefault();
   dragDepth = 0;
   document.body.classList.remove('dragging');
-  const file = firstImage(event.dataTransfer?.files);
-  if (file) void setScreenshot(file);
+  const files = event.dataTransfer?.files;
+  const image = firstImage(files);
+  if (image) void setScreenshot(image);
+  else if (files?.length) void loadCodeFile(files[0]);
 });
 
 function suggestedFileName(): string {
   if (lastFileName) return lastFileName;
+  if (state.mode === 'code') return state.code.title.trim() || 'code';
   if (!screenshot) return 'mockup';
   return `${screenshot.name.replace(/\.[^.]+$/, '')}-mockup`;
 }
