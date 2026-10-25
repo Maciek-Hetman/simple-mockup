@@ -56,6 +56,8 @@ export interface MockupState extends FrameOptions {
   /** Percentages of the framed device's shorter side, so equal values give equal space. */
   paddingX: number;
   paddingY: number;
+  /** Keep horizontal and vertical padding equal. */
+  paddingLocked: boolean;
   shadow: boolean;
   background: BackgroundMode;
   backgroundColor: string;
@@ -102,6 +104,7 @@ export const defaultState: MockupState = {
   islandSize: 100,
   paddingX: 10,
   paddingY: 10,
+  paddingLocked: true,
   shadow: true,
   background: 'color',
   backgroundColor: '#e0e7ff',
