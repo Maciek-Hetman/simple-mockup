@@ -2,7 +2,7 @@ import '@fontsource/jetbrains-mono/400.css';
 import './style.css';
 import { LANGUAGES, languageForFile } from './code/languages.ts';
 import { CUSTOM_THEME, paletteFor, SLOT_LABELS, SLOTS, THEMES, type Palette, type Slot } from './code/themes.ts';
-import { initAutoIndent } from './editor.ts';
+import { initAutoIndent, reindent } from './editor.ts';
 import { CODE_FONT, codeSubject, type CodeSubject } from './code/window.ts';
 import { initColorPickers } from './color-picker.ts';
 import { cleanFileName, downloadCanvas, EXTENSIONS } from './export.ts';
@@ -325,13 +325,13 @@ async function setScreenshot(file: File): Promise<void> {
 }
 
 function setCode(text: string, fileName?: string): void {
-  codeInput.value = text;
   if (fileName) {
     const language = languageForFile(fileName);
     if (language) select('language').value = language;
     input('windowTitle').value = fileName;
     lastFileName = null;
   }
+  codeInput.value = input('autoIndent').checked ? reindent(text, select('language').value) : text;
   setHint(codeHint, CODE_HINT);
   showMode('code');
 }
@@ -380,7 +380,11 @@ form.addEventListener('submit', (event) => event.preventDefault());
 // Format and scale belong to the form but sit in the dialog, so their events bubble up there.
 saveDialog.addEventListener('change', update);
 
-initAutoIndent(codeInput, () => state.code.autoIndent);
+initAutoIndent(
+  codeInput,
+  () => state.code.autoIndent,
+  () => state.code.language,
+);
 
 codeInput.addEventListener('scroll', () => {
   gutter.scrollTop = codeInput.scrollTop;
