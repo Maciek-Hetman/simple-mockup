@@ -7,6 +7,7 @@ Wrap a screenshot in a phone or browser frame, or turn a code snippet into a hig
 - Frames: Android, iPhone, browser window, or a plain rounded border
 - Code screenshots:
   - An editor with line numbers next to the preview; paste code, open a file, or drop one on the page
+  - Optional auto-indent in the editor: Enter keeps the indentation and opens a level after a bracket, Tab and Shift+Tab indent and outdent (Escape, then Tab, moves focus)
   - Syntax highlighting for 30+ languages, picked automatically when you drop a file
   - 11 color schemes, or your own: edit any color and it becomes a custom scheme
   - Drag the window edges (or use the width slider) to resize; long lines wrap at spaces, commas, brackets, and method chains before breaking words, and continuation lines are indented

@@ -39,6 +39,8 @@ export interface CodeOptions {
   /** Narrow the window to the longest line when that's shorter than `width`. */
   fitWidth: boolean;
   lineNumbers: boolean;
+  /** Editor only: Enter keeps the indentation and Tab indents. Doesn't affect the image. */
+  autoIndent: boolean;
   title: string;
   windowControls: boolean;
   borderColor: string;
@@ -88,6 +90,7 @@ export const defaultState: MockupState = {
     width: 80,
     fitWidth: true,
     lineNumbers: false,
+    autoIndent: true,
     title: '',
     windowControls: true,
     borderColor: '#ffffff',

@@ -184,6 +184,12 @@ body {
   white-space: nowrap;
 }
 
+.editor-options {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
 .editor-body {
   display: flex;
   flex: 1;
