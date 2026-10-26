@@ -2,6 +2,7 @@ import '@fontsource/jetbrains-mono/400.css';
 import './style.css';
 import { LANGUAGES, languageForFile } from './code/languages.ts';
 import { CUSTOM_THEME, paletteFor, SLOT_LABELS, SLOTS, THEMES, type Palette, type Slot } from './code/themes.ts';
+import { initAutoIndent } from './editor.ts';
 import { CODE_FONT, codeSubject, type CodeSubject } from './code/window.ts';
 import { initColorPickers } from './color-picker.ts';
 import { cleanFileName, downloadCanvas, EXTENSIONS } from './export.ts';
@@ -92,6 +93,7 @@ function writeForm(s: MockupState): void {
   input('codeWidth').value = String(s.code.width);
   input('fitWidth').checked = s.code.fitWidth;
   input('lineNumbers').checked = s.code.lineNumbers;
+  input('autoIndent').checked = s.code.autoIndent;
   select('theme').value = s.code.theme;
   input('windowTitle').value = s.code.title;
   input('windowControls').checked = s.code.windowControls;
@@ -127,6 +129,7 @@ function readForm(): void {
     width: Number(input('codeWidth').value),
     fitWidth: input('fitWidth').checked,
     lineNumbers: input('lineNumbers').checked,
+    autoIndent: input('autoIndent').checked,
     title: input('windowTitle').value,
     windowControls: input('windowControls').checked,
     borderColor: input('codeBorderColor').value,
@@ -376,6 +379,8 @@ form.addEventListener('change', update);
 form.addEventListener('submit', (event) => event.preventDefault());
 // Format and scale belong to the form but sit in the dialog, so their events bubble up there.
 saveDialog.addEventListener('change', update);
+
+initAutoIndent(codeInput, () => state.code.autoIndent);
 
 codeInput.addEventListener('scroll', () => {
   gutter.scrollTop = codeInput.scrollTop;
