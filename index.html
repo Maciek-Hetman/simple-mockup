@@ -185,7 +185,7 @@
         <section data-show-when-mode="code">
           <h2>Theme</h2>
           <select name="theme" class="select" aria-label="Color scheme"></select>
-          <details class="palette-editor">
+          <details class="disclosure">
             <summary>Customize colors</summary>
             <div class="palette" id="palette"></div>
           </details>
@@ -216,26 +216,31 @@
                 <input type="checkbox" name="windowControls" role="switch" />
               </label>
             </div>
-            <label class="field">
-              <span>Border <output data-for="codeBorderWidth" data-unit="px"></output></span>
-              <input type="range" name="codeBorderWidth" min="0" max="12" step="0.5" />
-            </label>
-            <div
-              class="color-picker"
-              data-color-picker
-              data-presets="#ffffff,#e4e4e7,#a1a1aa,#52525b,#18181b,#4f46e5,#ec4899,#f59e0b"
-              data-show-when-nonzero="codeBorderWidth"
-            >
-              <div class="swatches" role="group" aria-label="Preset border colors"></div>
-              <div class="color-custom">
-                <input type="color" name="codeBorderColor" aria-label="Border color" />
-                <input type="text" class="hex" maxlength="7" spellcheck="false" aria-label="Border color hex value" />
+            <details class="disclosure">
+              <summary>Border &amp; corners</summary>
+              <div class="stack">
+                <label class="field">
+                  <span>Border <output data-for="codeBorderWidth" data-unit="px"></output></span>
+                  <input type="range" name="codeBorderWidth" min="0" max="12" step="0.5" />
+                </label>
+                <div
+                  class="color-picker"
+                  data-color-picker
+                  data-presets="#ffffff,#e4e4e7,#a1a1aa,#52525b,#18181b,#4f46e5,#ec4899,#f59e0b"
+                  data-show-when-nonzero="codeBorderWidth"
+                >
+                  <div class="swatches" role="group" aria-label="Preset border colors"></div>
+                  <div class="color-custom">
+                    <input type="color" name="codeBorderColor" aria-label="Border color" />
+                    <input type="text" class="hex" maxlength="7" spellcheck="false" aria-label="Border color hex value" />
+                  </div>
+                </div>
+                <label class="field">
+                  <span>Corner radius <output data-for="codeRadius" data-unit="px"></output></span>
+                  <input type="range" name="codeRadius" min="0" max="32" step="1" />
+                </label>
               </div>
-            </div>
-            <label class="field">
-              <span>Corner radius <output data-for="codeRadius" data-unit="px"></output></span>
-              <input type="range" name="codeRadius" min="0" max="32" step="1" />
-            </label>
+            </details>
           </div>
         </section>
 
