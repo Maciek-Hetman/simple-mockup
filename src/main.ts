@@ -9,8 +9,8 @@ import { cleanFileName, downloadCanvas, EXTENSIONS } from './export.ts';
 import { render, screenshotSubject, type Placement } from './render.ts';
 import { initResizeHandles } from './resize-handles.ts';
 import { samplePicture } from './sample.ts';
+import { loadState, saveState } from './storage.ts';
 import {
-  defaultState,
   type Appearance,
   type BackgroundMode,
   type Device,
@@ -42,7 +42,7 @@ const saveCancel = document.querySelector<HTMLButtonElement>('#save-cancel')!;
 const fileNameInput = document.querySelector<HTMLInputElement>('#file-name')!;
 const fileNameExtension = document.querySelector<HTMLElement>('#file-name-extension')!;
 
-const state: MockupState = structuredClone(defaultState);
+const state: MockupState = loadState();
 let screenshot: (Picture & { name: string }) | null = null;
 let backgroundImage: (Picture & { name: string }) | null = null;
 /** The name the user last saved under, until a new screenshot or code file comes in. */
@@ -293,6 +293,7 @@ function scheduleRender(): void {
 
 function update(): void {
   readForm();
+  saveState(state);
   updateUi();
   scheduleRender();
 }

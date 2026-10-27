@@ -531,17 +531,21 @@ h2 + .stack {
   margin-top: 0;
 }
 
-.palette-editor {
+.disclosure {
   margin-top: 10px;
 }
 
-.palette-editor summary {
+.disclosure > .stack {
+  padding-top: 4px;
+}
+
+.disclosure summary {
   color: var(--muted);
   cursor: pointer;
   user-select: none;
 }
 
-.palette-editor summary:hover {
+.disclosure summary:hover {
   color: var(--text);
 }
 
