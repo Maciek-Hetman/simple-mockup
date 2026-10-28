@@ -24,11 +24,14 @@ export async function downloadCanvas(
     canvas.toBlob(resolve, MIME_TYPES[format], 0.92),
   );
   if (!blob) throw new Error('Could not encode the image.');
+  downloadBlob(blob, `${cleanFileName(name) || 'mockup'}.${EXTENSIONS[format]}`);
+}
 
+export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${cleanFileName(name) || 'mockup'}.${EXTENSIONS[format]}`;
+  link.download = fileName;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
