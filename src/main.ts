@@ -6,6 +6,8 @@ import { initAutoIndent, reindent } from './editor.ts';
 import { CODE_FONT, codeSubject, type CodeSubject } from './code/window.ts';
 import { initColorPickers } from './color-picker.ts';
 import { cleanFileName, downloadCanvas, EXTENSIONS } from './export.ts';
+import { initPresetPanel } from './preset-panel.ts';
+import { withPreset, type Preset } from './presets.ts';
 import { render, screenshotSubject, type Placement } from './render.ts';
 import { initResizeHandles } from './resize-handles.ts';
 import { samplePicture } from './sample.ts';
@@ -211,6 +213,7 @@ function updateUi(): void {
   }
   writePalette(paletteFor(state.code.theme, state.code.customColors));
   syncColorPickers();
+  syncPresets();
   updateGutter();
   fileNameExtension.textContent = `.${EXTENSIONS[state.format]}`;
 
@@ -224,6 +227,14 @@ function updateUi(): void {
   }
   setHint(backgroundHint, backgroundImage ? `Using ${backgroundImage.name}.` : '');
 }
+
+function applyPreset(preset: Preset): void {
+  Object.assign(state, withPreset(state, preset));
+  writeForm(state);
+  update();
+}
+
+const syncPresets = initPresetPanel(() => state, applyPreset);
 
 function setHint(el: HTMLElement, text: string, warning = false): void {
   el.textContent = text;

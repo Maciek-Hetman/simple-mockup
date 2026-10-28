@@ -13,6 +13,7 @@ Wrap a screenshot in a phone or browser frame, or turn a code snippet into a hig
   - Drag the window edges (or use the width slider) to resize; long lines wrap at spaces, commas, brackets, and method chains before breaking words, and continuation lines are indented
   - Line numbers, window title and controls, border color and width, corner radius
 - Adjustable horizontal and vertical padding (or locked together), shadow, and background (none, solid color, or image)
+- Presets for each mode, with live thumbnails: six built-in looks, or save the current device, frame, theme, window, and canvas settings as your own (the screenshot, code, and background image aren't included). Saving under an existing name replaces that preset. Your presets stay in the browser, and Export and Import move them between browsers as a JSON file
 - Export as PNG or JPEG with a custom file name, and code at 1x to 4x
 
 ## Development
@@ -34,6 +35,9 @@ npm run preview   # serve the production build locally
 - `src/frames/` - one renderer per device frame
 - `src/code/` - code screenshots: languages (Prism), color schemes, highlighting, line wrapping, and the window renderer
 - `src/resize-handles.ts` - drag handles for resizing the code window in the preview
+- `src/presets.ts` - built-in presets, what a preset keeps, and saving, exporting, and importing presets
+- `src/preset-panel.ts` - the presets section: thumbnails, the save dialog, delete with undo, import and export
+- `src/storage.ts` - saves settings in the browser and checks saved or imported settings
 - `src/export.ts` - PNG/JPEG export and file name handling
 
 ## Deployment

@@ -125,6 +125,33 @@
           <p class="hint" id="screenshot-hint" hidden></p>
         </section>
 
+        <section>
+          <h2>Presets</h2>
+          <div class="preset-grid" id="preset-grid" role="list"></div>
+          <div class="preset-actions">
+            <button type="button" class="button" id="preset-save" title="Save the current look as a preset">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+                <path d="M8 3v10M3 8h10" />
+              </svg>
+              Save
+            </button>
+            <button type="button" class="button" data-opens="#preset-file-input" title="Add presets from a file">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 10.5v-8M4.5 6 8 2.5 11.5 6M3 13.5h10" />
+              </svg>
+              Import
+            </button>
+            <button type="button" class="button" id="preset-export" title="Download your presets as a file">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10" />
+              </svg>
+              Export
+            </button>
+          </div>
+          <input type="file" id="preset-file-input" accept=".json,application/json" hidden />
+          <p class="hint" id="preset-hint" hidden></p>
+        </section>
+
         <section data-show-when-mode="screenshot">
           <h2>Device</h2>
           <div class="segmented segmented-2x2" role="radiogroup" aria-label="Device">
@@ -367,6 +394,24 @@
           <span class="export-size" id="export-size"></span>
           <button type="button" class="button" id="save-cancel">Cancel</button>
           <button type="submit" class="button button-primary" value="save">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="dialog" id="preset-dialog" aria-labelledby="preset-dialog-title" closedby="any">
+      <form method="dialog" autocomplete="off">
+        <h2 class="dialog-title" id="preset-dialog-title">Save preset</h2>
+        <div class="dialog-fields">
+          <div class="field">
+            <label for="preset-name">Name</label>
+            <input type="text" id="preset-name" class="text-input" spellcheck="false" required />
+          </div>
+          <p class="hint" id="preset-note"></p>
+          <p class="hint warning" id="preset-replace-hint" hidden>You already have a preset with this name. Saving replaces it.</p>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="button" id="preset-cancel">Cancel</button>
+          <button type="submit" class="button button-primary" value="save" id="preset-confirm">Save</button>
         </div>
       </form>
     </dialog>

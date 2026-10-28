@@ -573,6 +573,159 @@ h2 + .stack {
   padding: 0 8px;
 }
 
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 8px;
+}
+
+.preset {
+  position: relative;
+}
+
+.preset-apply {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.preset-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Exactly the shape thumbnails are fitted to, so they never overflow it. */
+  box-sizing: content-box;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--control);
+}
+
+.preset-thumb canvas {
+  display: block;
+  height: auto;
+  border-radius: 2px;
+}
+
+.preset-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-apply:hover {
+  color: var(--text);
+}
+
+.preset-apply:hover .preset-thumb {
+  border-color: var(--muted);
+}
+
+.preset-apply:focus-visible {
+  outline: none;
+}
+
+.preset-apply:focus-visible .preset-thumb,
+.preset-apply[aria-pressed='true'] .preset-thumb {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.preset-apply[aria-pressed='true'] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.preset-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.preset:hover .preset-delete,
+.preset-delete:focus-visible {
+  opacity: 1;
+}
+
+.preset-delete:hover {
+  background: rgb(0 0 0 / 0.8);
+}
+
+.preset-delete:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@media (hover: none) {
+  .preset-delete {
+    opacity: 1;
+  }
+}
+
+.preset-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.preset-actions .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 6px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.button:disabled:hover {
+  border-color: var(--border);
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.link-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .padding-group {
   display: grid;
   gap: 8px;
@@ -753,6 +906,11 @@ h2 + .stack {
   box-shadow:
     0 0 0 1px var(--border),
     0 8px 30px rgb(0 0 0 / 0.08);
+}
+
+/* A checkerboard behind the transparent parts. */
+#canvas,
+.preset-thumb canvas {
   background-color: #fff;
   background-image:
     linear-gradient(45deg, #e4e4e7 25%, transparent 25%),
@@ -765,6 +923,15 @@ h2 + .stack {
     0 8px,
     8px -8px,
     -8px 0;
+}
+
+.preset-thumb canvas {
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0;
 }
 
 .meta {
@@ -857,6 +1024,7 @@ h2 + .stack {
 .dialog-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   margin-top: 20px;
 }
