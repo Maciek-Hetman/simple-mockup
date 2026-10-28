@@ -8,7 +8,7 @@ import { initColorPickers } from './color-picker.ts';
 import { cleanFileName, downloadCanvas, EXTENSIONS } from './export.ts';
 import { initPresetPanel } from './preset-panel.ts';
 import { withPreset, type Preset } from './presets.ts';
-import { render, screenshotSubject, type Placement } from './render.ts';
+import { outputSize, render, screenshotSubject, type Placement, type Subject } from './render.ts';
 import { initResizeHandles } from './resize-handles.ts';
 import { samplePicture } from './sample.ts';
 import { loadState, saveState } from './storage.ts';
@@ -51,6 +51,8 @@ let backgroundImage: (Picture & { name: string }) | null = null;
 let lastFileName: string | null = null;
 /** The last code window drawn and where it landed, for the resize handles. */
 let lastCode: { subject: CodeSubject; placement: Placement } | null = null;
+/** CSS pixels per subject unit in the preview. Held while a resize handle is dragged. */
+let previewZoom = 1;
 
 const CODE_HINT = codeHint.textContent ?? '';
 const MAX_CODE_FILE_SIZE = 1_000_000;
@@ -256,6 +258,7 @@ const placeResizeHandles = initResizeHandles(preview, canvas, {
     input('fitWidth').checked = false;
     update();
   },
+  end: scheduleRender,
 });
 
 let fontLoading = false;
@@ -275,20 +278,40 @@ function ensureCodeFont(text: string): void {
     });
 }
 
-function renderNow(): void {
+function currentSubject(): Subject {
   if (state.mode === 'code') {
     ensureCodeFont(state.code.text);
-    const subject = codeSubject(state.code);
-    const placement = render(canvas, state, subject, backgroundImage);
-    lastCode = { subject, placement };
+    return codeSubject(state.code);
+  }
+  return screenshotSubject(state, screenshot ?? samplePicture(state.device));
+}
+
+/**
+ * Draws the preview at the size it's shown at, in device pixels. Letting CSS shrink the
+ * full-size image instead blurs thin lines unevenly and leaves curves jagged.
+ */
+function renderNow(): void {
+  const subject = currentSubject();
+  const output = outputSize(subject);
+  if (!preview.classList.contains('resizing')) {
+    // One output pixel per CSS pixel, shrunk to fit.
+    const fit = Math.min(1, preview.clientWidth / output.width, preview.clientHeight / output.height);
+    previewZoom = output.scale * (fit > 0 ? fit : 1);
+  }
+  const dpr = window.devicePixelRatio;
+  const placement = render(canvas, state, { ...subject, pixelRatio: previewZoom * dpr }, backgroundImage);
+  canvas.style.width = `${canvas.width / dpr}px`;
+  canvas.style.height = `${canvas.height / dpr}px`;
+
+  if (state.mode === 'code') {
+    lastCode = { subject: subject as CodeSubject, placement };
     const { outer, scale } = placement;
     placeResizeHandles({ x: outer.x * scale, y: outer.y * scale, w: outer.w * scale, h: outer.h * scale });
   } else {
-    render(canvas, state, screenshotSubject(state, screenshot ?? samplePicture(state.device)), backgroundImage);
     lastCode = null;
     placeResizeHandles(null);
   }
-  dimensions.textContent = `${canvas.width} × ${canvas.height} px`;
+  dimensions.textContent = `${output.width} × ${output.height} px`;
   exportSize.textContent = dimensions.textContent;
 }
 
@@ -301,6 +324,9 @@ function scheduleRender(): void {
     renderNow();
   });
 }
+
+// The preview is drawn for its box, so draw it again when the box changes.
+new ResizeObserver(scheduleRender).observe(preview);
 
 function update(): void {
   readForm();
@@ -490,8 +516,9 @@ saveCancel.addEventListener('click', () => saveDialog.close());
 saveDialog.addEventListener('close', () => {
   if (saveDialog.returnValue !== 'save') return;
   lastFileName = cleanFileName(fileNameInput.value) || null;
-  renderNow();
-  void downloadCanvas(canvas, state.format, fileNameInput.value);
+  const output = document.createElement('canvas');
+  render(output, state, currentSubject(), backgroundImage);
+  void downloadCanvas(output, state.format, fileNameInput.value);
 });
 
 writeForm(state);
