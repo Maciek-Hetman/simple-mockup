@@ -857,11 +857,6 @@ h2 + .stack {
   overflow: hidden;
 }
 
-.preview.resizing #canvas {
-  max-width: none;
-  max-height: none;
-}
-
 .resize-handle {
   position: absolute;
   display: flex;
@@ -898,11 +893,10 @@ h2 + .stack {
   }
 }
 
+/* Sized from script, to fit the preview in whole device pixels. */
 #canvas {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 4px;
+  flex: none;
   box-shadow:
     0 0 0 1px var(--border),
     0 8px 30px rgb(0 0 0 / 0.08);

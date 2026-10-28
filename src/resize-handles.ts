@@ -4,6 +4,8 @@ export interface ResizeCallbacks {
   /** The current width in columns and how many canvas pixels one column takes up. */
   start(): { columns: number; columnWidth: number } | null;
   resize(columns: number): void;
+  /** The drag is over, so the preview can fit the canvas to its box again. */
+  end(): void;
 }
 
 /**
@@ -47,8 +49,7 @@ export function initResizeHandles(
       drag = null;
       dragZoom = null;
       preview.classList.remove('resizing');
-      canvas.style.width = '';
-      canvas.style.height = '';
+      callbacks.end();
       place();
     };
     handle.addEventListener('pointerup', end);
@@ -59,10 +60,6 @@ export function initResizeHandles(
   function place(): void {
     for (const handle of handles) handle.hidden = box === null;
     if (!box) return;
-    if (dragZoom !== null) {
-      canvas.style.width = `${canvas.width * dragZoom}px`;
-      canvas.style.height = `${canvas.height * dragZoom}px`;
-    }
     const canvasRect = canvas.getBoundingClientRect();
     const previewRect = preview.getBoundingClientRect();
     const zoom = canvasRect.width / canvas.width;

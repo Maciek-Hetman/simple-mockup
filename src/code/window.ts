@@ -107,7 +107,8 @@ export function codeSubject(opts: CodeOptions): CodeSubject {
   const titleBarWidth = 2 * Math.max(PADDING_X, lightsWidth + 12) + titleWidth;
 
   const border = opts.borderWidth;
-  const innerWidth = Math.max(2 * PADDING_X + gutter + contentWidth, bar ? titleBarWidth : 0);
+  // Rounded up so the window's edges, and its border, fall on whole pixels.
+  const innerWidth = Math.ceil(Math.max(2 * PADDING_X + gutter + contentWidth, bar ? titleBarWidth : 0));
   const codeTop = bar || PADDING_Y;
   const width = innerWidth + 2 * border;
   const height = codeTop + rows.length * LINE_HEIGHT + PADDING_Y + 2 * border;

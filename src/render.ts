@@ -52,6 +52,18 @@ export function screenshotSubject(state: MockupState, shot: Picture): Subject {
   };
 }
 
+/** The canvas size `render` gives `subject`, and how many canvas pixels make one unit. */
+export function outputSize(subject: Subject): { width: number; height: number; scale: number } {
+  const fullW = subject.width + 2 * subject.paddingX;
+  const fullH = subject.height + 2 * subject.paddingY;
+  const scale = Math.min(
+    subject.pixelRatio,
+    MAX_SIDE / Math.max(fullW, fullH),
+    Math.sqrt(MAX_AREA / (fullW * fullH)),
+  );
+  return { width: Math.round(fullW * scale), height: Math.round(fullH * scale), scale };
+}
+
 export function render(
   canvas: HTMLCanvasElement,
   state: MockupState,
@@ -61,22 +73,19 @@ export function render(
   const { paddingX, paddingY } = subject;
   const fullW = subject.width + 2 * paddingX;
   const fullH = subject.height + 2 * paddingY;
-  const scale = Math.min(
-    subject.pixelRatio,
-    MAX_SIDE / Math.max(fullW, fullH),
-    Math.sqrt(MAX_AREA / (fullW * fullH)),
-  );
+  const { width, height, scale } = outputSize(subject);
 
-  canvas.width = Math.round(fullW * scale);
-  canvas.height = Math.round(fullH * scale);
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext('2d')!;
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  // Stretched by under a pixel to the rounded size, so the far edges aren't cut off.
+  ctx.setTransform(width / fullW, 0, 0, height / fullH, 0, 0);
   ctx.imageSmoothingQuality = 'high';
 
   drawBackground(ctx, state, background, fullW, fullH);
 
   const outer: Rect = { x: paddingX, y: paddingY, w: subject.width, h: subject.height };
-  if (state.shadow) drawShadow(ctx, outer, subject.radius, scale);
+  if (state.shadow) drawShadow(ctx, outer, subject.radius, width / fullW);
   subject.draw(ctx, outer);
   return { outer, scale };
 }
