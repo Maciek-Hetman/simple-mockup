@@ -104,7 +104,6 @@ export const BUILT_IN_PRESETS: Preset[] = [
   }),
 
   preset('Default', 'code', {}),
-  preset('Dracula', 'code', { code: { theme: 'dracula', paddingX: 64, paddingY: 64 }, backgroundColor: '#4f46e5' }),
   preset('Midnight', 'code', {
     code: { theme: 'tokyo-night', borderWidth: 1, borderColor: '#3f3f46' },
     backgroundColor: '#18181b',
@@ -117,6 +116,19 @@ export const BUILT_IN_PRESETS: Preset[] = [
   preset('Dawn', 'code', { code: { theme: 'rose-pine-dawn' }, backgroundColor: '#fce7f3' }),
   preset('Bare', 'code', {
     code: { theme: 'github-dark', windowControls: false, radius: 8, paddingX: 0, paddingY: 0 },
+    background: 'none',
+    shadow: false,
+  }),
+  preset('Bare light', 'code', {
+    code: {
+      theme: 'github-light',
+      windowControls: false,
+      borderWidth: 1,
+      borderColor: '#000000',
+      radius: 8,
+      paddingX: 0,
+      paddingY: 0,
+    },
     background: 'none',
     shadow: false,
   }),
