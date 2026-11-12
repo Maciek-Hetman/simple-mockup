@@ -61,7 +61,7 @@ body {
 }
 
 .app[data-mode='code'] {
-  grid-template-columns: clamp(300px, 30vw, 480px) minmax(0, 1fr) 300px;
+  grid-template-columns: clamp(440px, 45vw, 960px) minmax(0, 1fr) 300px;
   grid-template-areas:
     'top top top'
     'editor stage inspector';
@@ -1035,7 +1035,7 @@ h2 + .stack {
 }
 
 /* Narrower screens: in code mode the editor moves under the preview. */
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .app[data-mode='code'] {
     grid-template-columns: minmax(0, 1fr) 300px;
     grid-template-rows: auto minmax(0, 1fr) minmax(200px, 40%);
