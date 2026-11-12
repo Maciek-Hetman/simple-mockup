@@ -35,6 +35,19 @@ import 'prismjs/components/prism-haskell.js';
 import 'prismjs/components/prism-elixir.js';
 import 'prismjs/components/prism-r.js';
 
+// Prism's TypeScript grammar drops JavaScript's object-key rule, so in `{ a: 1, b: () => 2 }` only
+// `b` gets a color (as a function) and `a` stays plain. Put it back, also allowing `key?:` and keys
+// after `;` as in `{ a: string; b?: number }`. TSX copies TypeScript at load, so patch both.
+for (const id of ['typescript', 'tsx']) {
+  Prism.languages.insertBefore(id, 'operator', {
+    'literal-property': {
+      pattern: /((?:^|[,{;])[ \t]*)(?!\s)[_$a-zA-Z\xA0-￿](?:(?!\s)[$\w\xA0-￿])*(?=\s*\??\s*:)/m,
+      lookbehind: true,
+      alias: 'property',
+    },
+  });
+}
+
 export interface Language {
   /** Prism's grammar name, or `plain` for no highlighting. */
   id: string;
