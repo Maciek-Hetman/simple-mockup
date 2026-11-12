@@ -43,6 +43,7 @@ const saveDialog = document.querySelector<HTMLDialogElement>('#save-dialog')!;
 const saveCancel = document.querySelector<HTMLButtonElement>('#save-cancel')!;
 const fileNameInput = document.querySelector<HTMLInputElement>('#file-name')!;
 const fileNameExtension = document.querySelector<HTMLElement>('#file-name-extension')!;
+const exportError = document.querySelector<HTMLElement>('#export-error')!;
 
 const state: MockupState = loadState();
 let screenshot: (Picture & { name: string }) | null = null;
@@ -373,9 +374,10 @@ async function setScreenshot(file: File): Promise<void> {
 
 function setCode(text: string, fileName?: string): void {
   if (fileName) {
-    // Auto-detect reads the extension from the title, so only a picked language needs changing.
+    // Auto-detect reads the extension from the title. A picked language is replaced by the
+    // file's own, or by auto-detect when the extension is unknown, so it doesn't carry over.
     const language = languageForFile(fileName);
-    if (language && select('language').value !== AUTO) select('language').value = language;
+    if (select('language').value !== AUTO) select('language').value = language ?? AUTO;
     input('windowTitle').value = fileName;
     lastFileName = null;
   }
@@ -466,14 +468,16 @@ codeFileInput.addEventListener('change', () => {
 const TEXT_FIELDS = 'textarea, input[type="text"], [contenteditable]';
 
 window.addEventListener('paste', (event) => {
+  const text = event.clipboardData?.getData('text/plain');
+  const inTextField = event.target instanceof Element && event.target.closest(TEXT_FIELDS);
+  // Word and Excel put an image beside the text, so keep the text when pasting into a field.
+  if (inTextField && text) return;
   const file = firstImage(event.clipboardData?.files);
   if (file) {
     event.preventDefault();
     void setScreenshot(file);
     return;
   }
-  const text = event.clipboardData?.getData('text/plain');
-  const inTextField = event.target instanceof Element && event.target.closest(TEXT_FIELDS);
   if (state.mode !== 'code' || !text || inTextField) return;
   event.preventDefault();
   setCode(text);
@@ -499,6 +503,8 @@ window.addEventListener('dragover', (event) => {
 });
 
 window.addEventListener('drop', (event) => {
+  // Text dragged inside the editor is the browser's to move, so leave it alone.
+  if (!isFileDrag(event)) return;
   event.preventDefault();
   dragDepth = 0;
   document.body.classList.remove('dragging');
@@ -516,6 +522,7 @@ function suggestedFileName(): string {
 }
 
 downloadButton.addEventListener('click', () => {
+  setHint(exportError, '');
   fileNameInput.value = suggestedFileName();
   saveDialog.returnValue = '';
   saveDialog.showModal();
@@ -527,9 +534,21 @@ saveCancel.addEventListener('click', () => saveDialog.close());
 saveDialog.addEventListener('close', () => {
   if (saveDialog.returnValue !== 'save') return;
   lastFileName = cleanFileName(fileNameInput.value) || null;
+  setHint(exportError, '');
+  // The dialog has already closed, so reopen it with the message if the export fails.
+  const fail = () => {
+    setHint(exportError, "Couldn't create the image. Try a lower scale or a smaller picture.", true);
+    saveDialog.returnValue = '';
+    saveDialog.showModal();
+  };
   const output = document.createElement('canvas');
-  render(output, state, currentSubject(), backgroundImage);
-  void downloadCanvas(output, state.format, fileNameInput.value);
+  try {
+    render(output, state, currentSubject(), backgroundImage);
+  } catch {
+    fail();
+    return;
+  }
+  downloadCanvas(output, state.format, fileNameInput.value).catch(fail);
 });
 
 writeForm(state);

@@ -50,6 +50,22 @@ function graphemes(text: string): string[] {
   return Array.from(segmenter.segment(text), ({ segment }) => segment);
 }
 
+/** `title`, or its longest grapheme prefix plus an ellipsis if it's wider than `maxWidth`. Needs `ctx.font` set. */
+function fitTitle(ctx: CanvasRenderingContext2D, title: string, maxWidth: number): string {
+  if (!title || ctx.measureText(title).width <= maxWidth) return title;
+  const parts = graphemes(title);
+  const shorten = (count: number) => parts.slice(0, count).join('').trimEnd() + '…';
+  // Binary search: the widest prefix that fits. Zero graphemes leaves just the ellipsis.
+  let lo = 0;
+  let hi = parts.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (ctx.measureText(shorten(mid)).width <= maxWidth) lo = mid;
+    else hi = mid - 1;
+  }
+  return shorten(lo);
+}
+
 /** The smallest indentation step in the code, in columns: usually 2 or 4. */
 function indentStep(lines: Glyph[][]): number {
   let step = Infinity;
@@ -98,13 +114,17 @@ export function codeSubject(opts: CodeOptions): CodeSubject {
   const contentWidth = Math.max(charWidth, opts.fitWidth ? widestRow : Math.max(wrapWidth, widestRow));
   const gutter = opts.lineNumbers ? String(lines.length).length * charWidth + GUTTER_GAP : 0;
 
-  const title = opts.title.trim();
-  const bar = opts.windowControls || title !== '' ? TITLE_BAR : 0;
-  ctx.font = TITLE_FONT;
-  const titleWidth = title ? ctx.measureText(title).width : 0;
+  const rawTitle = opts.title.trim();
+  const bar = opts.windowControls || rawTitle !== '' ? TITLE_BAR : 0;
   // The title is centered, so it needs room for the lights on both sides.
   const lightsWidth = opts.windowControls ? PADDING_X + 2 * LIGHT_SPACING + 2 * LIGHT_RADIUS : 0;
-  const titleBarWidth = 2 * Math.max(PADDING_X, lightsWidth + 12) + titleWidth;
+  const titleInset = 2 * Math.max(PADDING_X, lightsWidth + 12);
+  // A title may widen the window, but not past the width of a full line; the rest is cut off.
+  const maxInnerWidth = Math.max(2 * PADDING_X + gutter + contentWidth, 2 * PADDING_X + gutter + wrapWidth);
+  ctx.font = TITLE_FONT;
+  const title = fitTitle(ctx, rawTitle, maxInnerWidth - titleInset);
+  const titleWidth = title ? ctx.measureText(title).width : 0;
+  const titleBarWidth = titleInset + titleWidth;
 
   const border = opts.borderWidth;
   // Rounded up so the window's edges, and its border, fall on whole pixels.

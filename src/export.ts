@@ -33,5 +33,6 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   link.href = url;
   link.download = fileName;
   link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  // Some browsers haven't started the download after a 0 ms delay, so keep the URL alive longer.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }

@@ -26,6 +26,8 @@ const BRACKET_LANGUAGES = new Set([
   'kotlin', 'php', 'rust', 'scala', 'scss', 'swift', 'tsx', 'typescript',
 ]);
 
+type OpenState = '' | '*/' | '`' | '"""' | "'''";
+
 interface LineScan {
   /** Brackets opened minus brackets closed on the line. */
   net: number;
@@ -33,8 +35,36 @@ interface LineScan {
   leading: number;
 }
 
+const JS_FAMILY = new Set(['javascript', 'typescript', 'jsx', 'tsx']);
+/** Languages where `//` is not a comment (url(http://...) and the like). */
+const NO_LINE_COMMENT = new Set(['css', 'json', 'graphql']);
+const TRIPLE_DOUBLE = new Set(['kotlin', 'swift', 'java', 'scala', 'dart', 'csharp']);
+/** A Rust char literal: 'x', '\n', '\x41', '\u{1F600}', '\''. Anything else after a `'` is a lifetime. */
+const RUST_CHAR = /'(?:\\(?:u\{[0-9a-fA-F]+\}|x[0-9a-fA-F]{2}|.)|[^\\'])'/uy;
+
+/** Whether a `/` after this code can only start a regex literal rather than divide. */
+function startsRegex(before: string): boolean {
+  const prefix = before.trimEnd();
+  if (!prefix) return true;
+  if ('(,=:[!&|?{};'.includes(prefix.at(-1)!)) return true;
+  return /(?:^|[^\w$])(?:return|typeof|case)$/.test(prefix);
+}
+
+/** Index of the `/` closing a regex literal that opens at `start`, or -1. Character classes are opaque. */
+function regexEnd(line: string, start: number): number {
+  let inClass = false;
+  for (let i = start + 1; i < line.length; i++) {
+    const char = line[i];
+    if (char === '\\') i++;
+    else if (char === '[') inClass = true;
+    else if (char === ']') inClass = false;
+    else if (char === '/' && !inClass) return i;
+  }
+  return -1;
+}
+
 /** Counts brackets on one line, skipping strings and comments. `open` carries multi-line ones over. */
-function scanLine(line: string, state: { open: '' | '*/' | '`' }): LineScan {
+function scanLine(line: string, state: { open: OpenState }, language: string): LineScan {
   let net = 0;
   let leading = 0;
   let code = false;
@@ -46,17 +76,41 @@ function scanLine(line: string, state: { open: '' | '*/' | '`' }): LineScan {
         state.open = '';
         i++;
       }
+    } else if (state.open === '"""' || state.open === "'''") {
+      if (char === '\\' && language !== 'kotlin') i++;
+      else if (line.startsWith(state.open, i)) {
+        state.open = '';
+        i += 2;
+      }
     } else if (state.open === '`' || quote) {
       if (char === '\\') i++;
       else if (char === (state.open || quote)) state.open = quote = '';
-    } else if (line.startsWith('//', i)) {
+    } else if (line.startsWith('//', i) && !NO_LINE_COMMENT.has(language) && line[i - 1] !== ':') {
       break;
     } else if (line.startsWith('/*', i)) {
       state.open = '*/';
       code = true;
       i++;
+    } else if (char === '/' && JS_FAMILY.has(language) && startsRegex(line.slice(0, i))) {
+      const end = regexEnd(line, i);
+      if (end !== -1) i = end;
+      code = true;
     } else if (char === '`') {
       state.open = '`';
+      code = true;
+    } else if (char === '"' && TRIPLE_DOUBLE.has(language) && line.startsWith('"""', i)) {
+      state.open = '"""';
+      code = true;
+      i += 2;
+    } else if (char === "'" && language === 'dart' && line.startsWith("'''", i)) {
+      state.open = "'''";
+      code = true;
+      i += 2;
+    } else if (char === "'" && language === 'rust') {
+      // Only a char literal is a quote; `'a` is a lifetime and just ordinary code.
+      RUST_CHAR.lastIndex = i;
+      const match = RUST_CHAR.exec(line);
+      if (match) i += match[0].length - 1;
       code = true;
     } else if (char === '"' || char === "'") {
       quote = char;
@@ -75,28 +129,38 @@ function scanLine(line: string, state: { open: '' | '*/' | '`' }): LineScan {
 }
 
 /**
- * Throws away the existing indentation and rebuilds it from bracket nesting. Other languages are
- * returned as is, since there indentation is the structure. Lines inside multi-line strings are
- * left alone.
+ * Indents flat code from its bracket nesting. Code that already has any indentation is returned
+ * as is, since rebuilding would flatten structure brackets don't show (JSX, switch bodies,
+ * braceless ifs). Other languages are returned as is too, since there indentation is the
+ * structure. Lines inside multi-line strings are left alone.
  */
 export function reindent(text: string, language: string): string {
   if (!BRACKET_LANGUAGES.has(language)) return text;
+  const lines = text.split(/\r?\n/);
+  // Lines inside strings and block comments don't count: their leading space is content or ` *` alignment.
+  const probe: { open: OpenState } = { open: '' };
+  const indented = lines.some((line) => {
+    const startedOutside = !probe.open;
+    scanLine(line, probe, language);
+    return startedOutside && line.trim() !== '' && /^[ \t]/.test(line);
+  });
+  if (indented) return text;
   const unit = indentUnit(text);
-  const state: { open: '' | '*/' | '`' } = { open: '' };
+  const state: { open: OpenState } = { open: '' };
+  const chains = language !== 'css' && language !== 'scss';
   let depth = 0;
-  return text
-    .split(/\r?\n/)
+  return lines
     .map((line) => {
       const trimmed = line.trim();
       const startedIn = state.open;
-      const { net, leading } = scanLine(line, state);
+      const { net, leading } = scanLine(line, state, language);
       const level = Math.max(0, depth - leading);
       depth = Math.max(0, depth + net);
-      if (startedIn === '`') return line;
+      if (startedIn && startedIn !== '*/') return line;
       if (!trimmed) return '';
       if (startedIn === '*/') return trimmed.startsWith('*') ? `${unit.repeat(level)} ${trimmed}` : line;
       // Chained calls hang one level in from the line they continue.
-      return unit.repeat(level + (trimmed.startsWith('.') ? 1 : 0)) + trimmed;
+      return unit.repeat(level + (chains && /^\.[A-Za-z_$]/.test(trimmed) ? 1 : 0)) + trimmed;
     })
     .join('\n');
 }
@@ -164,7 +228,8 @@ function shiftLines(area: HTMLTextAreaElement, outdent: boolean): void {
 /**
  * Makes the code editor behave like a code editor: Enter keeps the indentation (and adds a level
  * after an opening bracket), Tab and Shift+Tab indent and outdent. Escape lets the next Tab move
- * focus instead, so the field isn't a keyboard trap. Pasting over the whole text reindents it.
+ * focus instead, so the field isn't a keyboard trap. Pasting over the whole text indents it from its
+ * bracket nesting, but only when it has no indentation at all; already-indented code is left as is.
  */
 export function initAutoIndent(
   area: HTMLTextAreaElement,
