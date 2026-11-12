@@ -1,6 +1,6 @@
 import '@fontsource/jetbrains-mono/400.css';
 import './style.css';
-import { LANGUAGES, languageForFile } from './code/languages.ts';
+import { AUTO, LANGUAGES, languageForFile, resolveLanguage } from './code/languages.ts';
 import { CUSTOM_THEME, paletteFor, SLOT_LABELS, SLOTS, THEMES, type Palette, type Slot } from './code/themes.ts';
 import { initAutoIndent, reindent } from './editor.ts';
 import { CODE_FONT, codeSubject, type CodeSubject } from './code/window.ts';
@@ -61,7 +61,9 @@ const input = (name: string) => form.elements.namedItem(name) as HTMLInputElemen
 const radios = (name: string) => form.elements.namedItem(name) as RadioNodeList;
 const select = (name: string) => form.elements.namedItem(name) as HTMLSelectElement;
 
-select('language').append(...LANGUAGES.map(({ id, label }) => new Option(label, id)));
+const autoOption = new Option('Auto-detect', AUTO);
+select('language').append(autoOption, ...LANGUAGES.map(({ id, label }) => new Option(label, id)));
+const languageLabels = new Map(LANGUAGES.map(({ id, label }) => [id, label]));
 const themeGroup = (label: string, dark: boolean) => {
   const group = document.createElement('optgroup');
   group.label = label;
@@ -213,6 +215,8 @@ function updateUi(): void {
   for (const out of form.querySelectorAll<HTMLOutputElement>('output[data-for]')) {
     out.value = `${input(out.dataset.for!).value}${out.dataset.unit ?? '%'}`;
   }
+  // The closed picker shows what auto-detect settled on.
+  autoOption.text = `Auto (${languageLabels.get(codeLanguage())})`;
   writePalette(paletteFor(state.code.theme, state.code.customColors));
   syncColorPickers();
   syncPresets();
@@ -278,10 +282,15 @@ function ensureCodeFont(text: string): void {
     });
 }
 
+/** The language the code is highlighted as, with auto-detect worked out. */
+function codeLanguage(text = state.code.text): string {
+  return resolveLanguage(state.code.language, text, state.code.title);
+}
+
 function currentSubject(): Subject {
   if (state.mode === 'code') {
     ensureCodeFont(state.code.text);
-    return codeSubject(state.code);
+    return codeSubject({ ...state.code, language: codeLanguage() });
   }
   return screenshotSubject(state, screenshot ?? samplePicture(state.device));
 }
@@ -364,12 +373,14 @@ async function setScreenshot(file: File): Promise<void> {
 
 function setCode(text: string, fileName?: string): void {
   if (fileName) {
+    // Auto-detect reads the extension from the title, so only a picked language needs changing.
     const language = languageForFile(fileName);
-    if (language) select('language').value = language;
+    if (language && select('language').value !== AUTO) select('language').value = language;
     input('windowTitle').value = fileName;
     lastFileName = null;
   }
-  codeInput.value = input('autoIndent').checked ? reindent(text, select('language').value) : text;
+  const language = resolveLanguage(select('language').value, text, input('windowTitle').value);
+  codeInput.value = input('autoIndent').checked ? reindent(text, language) : text;
   setHint(codeHint, CODE_HINT);
   showMode('code');
 }
@@ -421,7 +432,7 @@ saveDialog.addEventListener('change', update);
 initAutoIndent(
   codeInput,
   () => state.code.autoIndent,
-  () => state.code.language,
+  (text) => codeLanguage(text),
 );
 
 codeInput.addEventListener('scroll', () => {

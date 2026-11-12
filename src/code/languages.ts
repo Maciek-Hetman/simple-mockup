@@ -1,5 +1,6 @@
 import Prism from 'prismjs';
 import type { Grammar } from 'prismjs';
+import { detectLanguage } from './detect.ts';
 // Prism's language files extend the global Prism instance, so they must load in dependency
 // order. `prismjs` itself ships markup, CSS, C-like and JavaScript.
 import 'prismjs/components/prism-js-extras.js';
@@ -35,6 +36,19 @@ import 'prismjs/components/prism-haskell.js';
 import 'prismjs/components/prism-elixir.js';
 import 'prismjs/components/prism-r.js';
 
+// Prism's TypeScript grammar drops JavaScript's object-key rule, so in `{ a: 1, b: () => 2 }` only
+// `b` gets a color (as a function) and `a` stays plain. Put it back, also allowing `key?:` and keys
+// after `;` as in `{ a: string; b?: number }`. TSX copies TypeScript at load, so patch both.
+for (const id of ['typescript', 'tsx']) {
+  Prism.languages.insertBefore(id, 'operator', {
+    'literal-property': {
+      pattern: /((?:^|[,{;])[ \t]*)(?!\s)[_$a-zA-Z\xA0-￿](?:(?!\s)[$\w\xA0-￿])*(?=\s*\??\s*:)/m,
+      lookbehind: true,
+      alias: 'property',
+    },
+  });
+}
+
 export interface Language {
   /** Prism's grammar name, or `plain` for no highlighting. */
   id: string;
@@ -43,6 +57,8 @@ export interface Language {
 }
 
 export const PLAIN_TEXT = 'plain';
+/** Not a grammar: pick the language from the window title's extension, or else from the code. */
+export const AUTO = 'auto';
 
 export const LANGUAGES: Language[] = [
   { id: PLAIN_TEXT, label: 'Plain text', extensions: ['txt', 'text', 'log'] },
@@ -83,6 +99,17 @@ export const LANGUAGES: Language[] = [
 
 export function grammarFor(language: string): Grammar | undefined {
   return language === PLAIN_TEXT ? undefined : Prism.languages[language];
+}
+
+let lastDetection: { text: string; language: string } | null = null;
+
+/** The grammar to use for `language`, working out `auto` from the title or the code. */
+export function resolveLanguage(language: string, text: string, title: string): string {
+  if (language !== AUTO) return language;
+  const fromTitle = languageForFile(title.trim());
+  if (fromTitle) return fromTitle;
+  if (lastDetection?.text !== text) lastDetection = { text, language: detectLanguage(text) ?? PLAIN_TEXT };
+  return lastDetection.language;
 }
 
 /** Guesses the language from a file name, e.g. `main.rs` or `Dockerfile`. */
