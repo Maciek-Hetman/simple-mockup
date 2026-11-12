@@ -8,7 +8,7 @@ Wrap a screenshot in a phone or browser frame, or turn a code snippet into a hig
 - Code screenshots:
   - An editor with line numbers next to the preview; paste code, open a file, or drop one on the page
   - Optional auto-indent in the editor: Enter keeps the indentation and opens a level after a bracket, Tab and Shift+Tab indent and outdent (Escape, then Tab, moves focus); pasted or opened code in bracket-based languages is first stripped of its indentation and re-indented from its nesting
-  - Syntax highlighting for 30+ languages, picked automatically when you drop a file
+  - Syntax highlighting for 30+ languages. Auto-detect (the default) goes by the window title's extension, such as `main.rs`, and otherwise guesses from the code itself; or pick a language yourself
   - 11 color schemes, or your own: edit any color and it becomes a custom scheme
   - Drag the window edges (or use the width slider) to resize; long lines wrap at spaces, commas, brackets, and method chains before breaking words, and continuation lines are indented
   - Line numbers, window title and controls, border color and width, corner radius
@@ -33,7 +33,7 @@ npm run preview   # serve the production build locally
 - `src/main.ts` - app wiring: form state, uploads, download
 - `src/render.ts` - composes the framed screenshot or code window and the background onto the canvas
 - `src/frames/` - one renderer per device frame
-- `src/code/` - code screenshots: languages (Prism), color schemes, highlighting, line wrapping, and the window renderer
+- `src/code/` - code screenshots: languages (Prism), language detection, color schemes, highlighting, line wrapping, and the window renderer
 - `src/resize-handles.ts` - drag handles for resizing the code window in the preview
 - `src/presets.ts` - built-in presets, what a preset keeps, and saving, exporting, and importing presets
 - `src/preset-panel.ts` - the presets section: thumbnails, the save dialog, delete with undo, import and export

@@ -1,5 +1,5 @@
 import { CUSTOM_THEME, SLOTS, THEMES } from './code/themes.ts';
-import { LANGUAGES } from './code/languages.ts';
+import { AUTO, LANGUAGES } from './code/languages.ts';
 import { defaultState, type MockupState } from './state.ts';
 
 const KEY = 'simple-mockup:settings';
@@ -37,7 +37,7 @@ export function restoreState(saved: unknown): MockupState {
   state.background = oneOf(state.background, ['none', 'color', 'image'], d.background);
   state.format = oneOf(state.format, ['png', 'jpeg'], d.format);
   state.code.theme = oneOf(state.code.theme, [...THEMES.map((t) => t.id), CUSTOM_THEME], d.code.theme);
-  state.code.language = oneOf(state.code.language, LANGUAGES.map((l) => l.id), d.code.language);
+  state.code.language = oneOf(state.code.language, [AUTO, ...LANGUAGES.map((l) => l.id)], d.code.language);
   if (![1, 2, 3, 4].includes(state.code.scale)) state.code.scale = d.code.scale;
   state.simple.color = hex(state.simple.color, d.simple.color);
   state.backgroundColor = hex(state.backgroundColor, d.backgroundColor);

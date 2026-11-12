@@ -166,12 +166,17 @@ function shiftLines(area: HTMLTextAreaElement, outdent: boolean): void {
  * after an opening bracket), Tab and Shift+Tab indent and outdent. Escape lets the next Tab move
  * focus instead, so the field isn't a keyboard trap. Pasting over the whole text reindents it.
  */
-export function initAutoIndent(area: HTMLTextAreaElement, isEnabled: () => boolean, language: () => string): void {
+export function initAutoIndent(
+  area: HTMLTextAreaElement,
+  isEnabled: () => boolean,
+  /** The language of `text`, which is about to replace the editor's content. */
+  language: (text: string) => string,
+): void {
   let releaseTab = false;
   area.addEventListener('paste', (event) => {
     const text = event.clipboardData?.getData('text/plain');
     if (!isEnabled() || !text || area.selectionStart !== 0 || area.selectionEnd !== area.value.length) return;
-    const indented = reindent(text, language());
+    const indented = reindent(text, language(text));
     if (indented === text) return;
     event.preventDefault();
     replace(area, 0, area.value.length, indented, indented.length);

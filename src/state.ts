@@ -1,3 +1,4 @@
+import { AUTO } from './code/languages.ts';
 import { THEMES, type Palette } from './code/themes.ts';
 
 export type Mode = 'screenshot' | 'code';
@@ -30,6 +31,7 @@ export interface FrameOptions {
 /** Sizes are in CSS pixels; `scale` multiplies everything on export. */
 export interface CodeOptions {
   text: string;
+  /** A Prism language id, `plain`, or `auto` to detect it. */
   language: string;
   /** A theme id, or `custom` for `customColors`. */
   theme: string;
@@ -84,7 +86,7 @@ export const defaultState: MockupState = {
   mode: 'screenshot',
   code: {
     text: SAMPLE_CODE,
-    language: 'typescript',
+    language: AUTO,
     theme: THEMES[0].id,
     customColors: { ...THEMES[0].colors },
     width: 80,
